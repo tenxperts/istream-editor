@@ -1,0 +1,9 @@
+Anshuman Apr 30 2011
+
+
+This is a video editor for istream. The editor has a front end which is python based. You would need pyffmpeg library to compile. The editor can play video file- display video and audio (currently alsa). The algorithm (algo.cpp) is a back end video processing which uses the opencv library and can segment a video based
+on a three pass algorithm, the first pass being a hamming algorithm ( color 
+difference between neighbouring pixels), the second pass being a block segmentation (centre value of blocks uses) and the third pass being a color segmentation .
+
+
+
