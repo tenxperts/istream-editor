@@ -223,18 +223,19 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="activate" handler="on_buttonStop_activate"/>
+                <signal name="clicked" handler="on_buttonStop_clicked"/>
               </widget>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="buttonEdit">
-                <property name="label" translatable="yes">Edit</property>
+              <widget class="GtkButton" id="buttonKMeans">
+                <property name="label" translatable="yes">KMeans</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_buttonKMeans_clicked"/>
               </widget>
               <packing>
                 <property name="position">2</property>

@@ -29,6 +29,15 @@
                         <signal name="activate" handler="on_MainMenuBar_file_open_activate"/>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="MainMenuBarAdLoad">
+                        <property name="label">Load Ad</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_MainMenuBar_ad_load_activate"/>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -130,10 +139,35 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="activate" handler="on_buttonStop_activate"/>
+                <signal name="clicked" handler="on_buttonStop_clicked"/>
               </object>
               <packing>
                 <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonKMeans">
+                <property name="label" translatable="yes">KMeans
+</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_buttonKMeans_clicked"/>
+              </object>
+              <packing>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonTrimAds">
+                <property name="label" translatable="yes">TrimAds</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_buttonTrimAds_clicked"/>
+              </object>
+              <packing>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
@@ -151,6 +185,7 @@
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <signal name="file_activated" handler="on_FileChooserDialog_file_activated"/>
+    <signal name="delete-event" handler="on_FileChooserDialog_delete_event"/>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
@@ -177,5 +212,9 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-orientation-portrait</property>
   </object>
 </interface>
