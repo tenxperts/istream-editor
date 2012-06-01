@@ -36,7 +36,7 @@ class AlsaSoundLazyPlayer:
         self._d = alsaaudio.PCM()
         self._d.setchannels(channels)
         self._d.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self._d.setperiodsize((rate*channels)//fps)
+        self._d.setperiodsize((rate*channels)//int(fps))
         self._d.setrate(rate)
     def push_nowait(self,stamped_buffer):
         self._d.write(stamped_buffer[0].data)
