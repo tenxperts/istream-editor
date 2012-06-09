@@ -6,6 +6,7 @@ from opencv.cv import *
 from opencv.highgui import *
 from opencv import adaptors
 import gobject
+import cv
 
 
 #Anshuman :added on 28 May 2012 : sha1 hash imports
@@ -47,9 +48,11 @@ class AlsaSoundLazyPlayer:
         self._d.setformat(alsaaudio.PCM_FORMAT_S16_LE)
         self._d.setperiodsize((rate*channels)//int(fps))
         self._d.setrate(rate)
+	self._mute = False
 	return
     def push_nowait(self,stamped_buffer):
-        self._d.write(stamped_buffer[0].data)
+	if not self._mute:
+        	self._d.write(stamped_buffer[0].data)
 	return
 
 
@@ -62,17 +65,21 @@ class VideoEditor:
         	self.builder.add_from_file(self.gladeFile)
 
 
-		self.file_open_mode = False
-		self.ad_load_model = False
-		self.ad_dictionary = {}
+		self.adDictionary = {}
 		self.window = self.builder.get_object("MainWindow")
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
 		self.frameRGB = None
     		self.snd=None
-		self.mp=None
-		self.tracks=None
+		self.playbackMpegReader = None
+		self.playbackMpegReaderTracks = None
+		self.adLoadMpegReader = None
+		self.adLoadMpegReaderTracks = None
+		self.trimAdsPlaybackMpegReader = None
+		self.trimAdsPlaybackMpegReaderTracks = None
+		self.skipAdFrames = False
+		self.currAdFramesToSkip = 0
 		if (self.window):
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
@@ -129,20 +136,26 @@ class VideoEditor:
 	
 
 	def processAdLoad(self):
-                if (self.mp == None):
+                if (self.adLoadMpegReader == None):
                         ## create the reader object
-                        self.mp=FFMpegReader()
+                        self.adLoadMpegReader=FFMpegReader()
 
-                ## open an audio video file
-                self.mp.open(self.currentAdSelectedFullPathName, TS_VIDEO_RGB24)
-                self.tracks=self.mp.get_tracks()
+                	## open an audio video file
+                	self.adLoadMpegReader.open(self.currentAdSelectedFullPathName, TS_VIDEO_RGB24)
+                	self.adLoadMpegReaderTracks=self.adLoadMpegReader.get_tracks()
 
-                self.tracks[0].set_observer(self.compute_ad_frame_hash)
-                self.mp.step()
+                	self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash)
+		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
+		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+		for i in range(1,fps):
+                	self.adLoadMpegReader.step()
+		cvReleaseCapture(videoCaptureFile)
+		del self.adLoadMpegReader
+		self.adLoadMpegReader = None
 		return
 
 	def computeHash(self,frame):
-		im = adaptors.Ipl2PIL(frame)
+		im = adaptors.NumPy2PIL(frame)
     		im = im.resize((8, 8), Image.ANTIALIAS).convert('L')
     		avg = reduce(lambda x, y: x + y, im.getdata()) / 64.
     		return reduce(lambda x, (y, z): x | (z << y), enumerate(map(lambda i: 0 if i < avg else 1, im.getdata())), 0)
@@ -155,12 +168,11 @@ class VideoEditor:
      		return h
 
 	def compute_ad_frame_hash(self, thearray):
-		computedHash = sha1(thearray).hexdigest()
-		print "computed Hash " + computedHash
+		computedHash = self.computeHash(thearray)
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
 		nFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
-		print "nFrames " + str(nFrames)
-		self.ad_dictionary[computedHash] = (self.currentAdSelectedFullPathName, nFrames-1)
+		self.adDictionary[computedHash] = (self.currentAdSelectedFullPathName, nFrames-1)
+		cvReleaseCapture(videoCaptureFile)
 		return
 		
 	def on_button_play_clicked(self, widget):
@@ -168,62 +180,72 @@ class VideoEditor:
 
 
 	def playback_handler(self):
-		if (self.mp == None):
+		if (self.playbackMpegReader == None):
 			## create the reader object
-			self.mp=FFMpegReader()
+			self.playbackMpegReader=FFMpegReader()
 
 			## open an audio video file
-			self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
-			self.tracks=self.mp.get_tracks()
+			self.playbackMpegReader.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
+			self.playbackMpegReaderTracks=self.playbackMpegReader.get_tracks()
 
 			## connect audio to its device
-			self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
-			self.tracks[1].set_observer(self.ap.push_nowait)
-			self.tracks[0].set_observer(self.displayframe)
-		self.mp.step()
-
-		return 1
+			self.playbackAP=AlsaSoundLazyPlayer(self.playbackMpegReaderTracks[1].get_samplerate(),self.playbackMpegReaderTracks[1].get_channels(),int(self.playbackMpegReaderTracks[0].get_fps()))
+			self.playbackMpegReaderTracks[1].set_observer(self.playbackAP.push_nowait)
+			self.playbackMpegReaderTracks[0].set_observer(self.displayframe)
+		try: 
+			self.playbackMpegReader.step()
+			return 1
+		except:
+			del playbackMpegReader
+			return 0
 
 	def on_button_trim_ads_clicked(self, widget):
 		gobject.timeout_add(30, self.trim_ads_playback_handler)
 		return
 
 	def trim_ads_playback_handler(self):
-		if (self.mp == None):
+		if (self.trimAdsPlaybackMpegReader == None):
 			## create the reader object
-			self.mp=FFMpegReader()
+			self.trimAdsPlaybackMpegReader=FFMpegReader()
 
-		## open an audio video file
-		self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
-		self.tracks=self.mp.get_tracks()
+			## open an audio video file
+			self.trimAdsPlaybackMpegReader.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
+			self.trimAdsPlaybackMpegReaderTracks=self.trimAdsPlaybackMpegReader.get_tracks()
 
-		## connect audio to its device
-		self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
-		self.tracks[1].set_observer(self.ap.push_nowait)
-		self.tracks[0].set_observer(self.display_ads_trimmed_frame)
-		self.mp.step()
-
+			## connect audio to its device
+			self.trimAdsAP=AlsaSoundLazyPlayer(self.trimAdsPlaybackMpegReaderTracks[1].get_samplerate(),self.trimAdsPlaybackMpegReaderTracks[1].get_channels(),int(self.trimAdsPlaybackMpegReaderTracks[0].get_fps()))
+			self.trimAdsPlaybackMpegReaderTracks[1].set_observer(self.trimAdsAP.push_nowait)
+			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame)
+			return 1
+		self.trimAdsPlaybackMpegReader.step()
 		return 1
+
 
     	def display_ads_trimmed_frame(self,thearray):
       		"""
       		pyffmpeg callback
       		"""
+		if not self.skipAdFrames:
+			computedHash = self.computeHash(thearray)
 		
-		
-		computedHash = sha1(thearray).hexdigest()
-		if (self.ad_dictionary.has_key['self.currentAdSelectedFullPathName']):
-			(self.curr_ad_match_name, self.curr_ad_frames_to_skip) = self.ad_dictionary[computedHash] 
-			self.skip_ad_frames = True
+			if (self.adDictionary.has_key(computedHash)):
+				(self.currAdMatchName, self.currAdFramesToSkip) = self.adDictionary[computedHash] 
+				self.skipAdFrames = True
+				self.trimAdsAP._mute = True
+				for i in range (1,self.currAdFramesToSkip):
+					self.trimAdsPlaybackMpegReader.step()
+				self.skipAdFrames = False
+				self.trimAdsAP._mute = False
 
-		if  not(self.skip_ad_frames):
-			pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
-			self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
-                	self.mainNotebookImagePlayback.queue_draw()
-		elif (self.curr_ad_frames_to_skip == 0):
-			self.skip_ad_frames = False
-		else:
-			self.curr_ad_frames_to_skip = self.curr_ad_frames_to_skip - 1
+		#if  not(self.skipAdFrames):
+		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
+		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
+                self.mainNotebookImagePlayback.queue_draw()
+		#elif (self.currAdFramesToSkip == 0):
+		#	self.skipAdFrames = False
+		#	self.trimAdsAP._mute = False
+		#else:
+		#	self.currAdFramesToSkip = self.currAdFramesToSkip - 1
 		return
 
 
@@ -235,14 +257,14 @@ class VideoEditor:
 			## create the reader object
 			self.mp=FFMpegReader()
 
-		## open an audio video file
-		self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
-		self.tracks=self.mp.get_tracks()
+			## open an audio video file
+			self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
+			self.tracks=self.mp.get_tracks()
 
-		## connect audio to its device
-		self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
-		self.tracks[1].set_observer(self.ap.push_nowait)
-		self.tracks[0].set_observer(self.displayKMeansFrame)
+			## connect audio to its device
+			self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
+			self.tracks[1].set_observer(self.ap.push_nowait)
+			self.tracks[0].set_observer(self.displayKMeansFrame)
 		self.mp.step()
 
 		return 
