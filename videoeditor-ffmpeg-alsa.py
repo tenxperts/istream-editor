@@ -45,7 +45,7 @@ class AlsaSoundLazyPlayer:
         self._d = alsaaudio.PCM()
         self._d.setchannels(channels)
         self._d.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-        self._d.setperiodsize((rate*channels)//fps)
+        self._d.setperiodsize((rate*channels)//int(fps))
         self._d.setrate(rate)
 	return
     def push_nowait(self,stamped_buffer):
@@ -66,7 +66,6 @@ class VideoEditor:
 		self.ad_load_model = False
 		self.ad_dictionary = {}
 		self.window = self.builder.get_object("MainWindow")
-		self.fileChooserDialog = self.builder.get_object("FileChooserDialog")
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
@@ -78,7 +77,6 @@ class VideoEditor:
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
 				"on_MainMenuBar_ad_load_activate" : self.main_menu_bar_ad_load_activate,
-				"on_FileChooserDialog_file_activated" : self.file_chooser_dialog_file_activated,
 				"on_buttonPlay_clicked" : self.on_button_play_clicked,
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
@@ -110,24 +108,25 @@ class VideoEditor:
 		return retval
 
 	def main_menu_bar_file_open_activate(self, widget):
-		self.file_open_mode = True
-		self.fileChooserDialog.show()
+		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		self.fileChooserDialogResponse=self.fileChooserDialog.run()
+		if self.fileChooserDialogResponse == gtk.RESPONSE_OK:	
+			self.currentFileSelectedFullPathName = self.fileChooserDialog.get_filename()
+		self.fileChooserDialog.destroy()
 		return	
 
 	def main_menu_bar_ad_load_activate(self, widget):
-		self.ad_load_mode = True
-		self.fileChooserDialog.show()
-		return	
-
-	def file_chooser_dialog_file_activated(self, widget):
-		if self.file_open_mode:
-			self.fileChooserDialog.hide()
-			self.currentFileSelectedFullPathName = self.fileChooserDialog.get_filename()
-		elif self.ad_load_mode:
-			self.fileChooserDialog.hide()
+		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		self.fileChooserDialogResponse = self.fileChooserDialog.run()
+		if self.fileChooserDialogResponse== gtk.RESPONSE_OK : 
 			self.currentAdSelectedFullPathName = self.fileChooserDialog.get_filename()
 			self.processAdLoad()
+		self.fileChooserDialog.destroy()
 		return	
+
+	
 
 	def processAdLoad(self):
                 if (self.mp == None):
@@ -142,6 +141,18 @@ class VideoEditor:
                 self.mp.step()
 		return
 
+	def computeHash(self,frame):
+		im = adaptors.Ipl2PIL(frame)
+    		im = im.resize((8, 8), Image.ANTIALIAS).convert('L')
+    		avg = reduce(lambda x, y: x + y, im.getdata()) / 64.
+    		return reduce(lambda x, (y, z): x | (z << y), enumerate(map(lambda i: 0 if i < avg else 1, im.getdata())), 0)
+
+	def hamming(self, h1, h2):
+     		h, d = 0, h1 ^ h2
+     		while d:
+         		h += 1
+         		d &= d - 1
+     		return h
 
 	def compute_ad_frame_hash(self, thearray):
 		computedHash = sha1(thearray).hexdigest()
@@ -161,14 +172,14 @@ class VideoEditor:
 			## create the reader object
 			self.mp=FFMpegReader()
 
-		## open an audio video file
-		self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
-		self.tracks=self.mp.get_tracks()
+			## open an audio video file
+			self.mp.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
+			self.tracks=self.mp.get_tracks()
 
-		## connect audio to its device
-		self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
-		self.tracks[1].set_observer(self.ap.push_nowait)
-		self.tracks[0].set_observer(self.displayframe)
+			## connect audio to its device
+			self.ap=AlsaSoundLazyPlayer(self.tracks[1].get_samplerate(),self.tracks[1].get_channels(),int(self.tracks[0].get_fps()))
+			self.tracks[1].set_observer(self.ap.push_nowait)
+			self.tracks[0].set_observer(self.displayframe)
 		self.mp.step()
 
 		return 1

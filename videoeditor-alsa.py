@@ -82,9 +82,7 @@ class VideoEditor:
 		algo_output_file.close()
 		return retval
 
-	def main_menu_bar_file_open_activate(self, widget):		
-		self.file_open_mode = True
-		self.ad_load_mode = False
+	def main_menu_bar_file_open_activate(self, widget):
 		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
 		self.fileChooserDialogResponse=self.fileChooserDialog.run()
@@ -94,8 +92,6 @@ class VideoEditor:
 		return	
 
 	def main_menu_bar_ad_load_activate(self, widget):
-		self.ad_load_mode = True
-		self.file_open_mode = False
 		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
 		self.fileChooserDialogResponse = self.fileChooserDialog.run()
