@@ -176,7 +176,10 @@ class VideoEditor:
 		return
 		
 	def on_button_play_clicked(self, widget):
-		gobject.timeout_add(30, self.playback_handler)
+		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
+		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+		gobject.timeout_add(int(1000/fps), self.playback_handler)
+		cvReleaseCapture(videoCaptureFile)
 
 
 	def playback_handler(self):
@@ -200,7 +203,10 @@ class VideoEditor:
 			return 0
 
 	def on_button_trim_ads_clicked(self, widget):
-		gobject.timeout_add(30, self.trim_ads_playback_handler)
+		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
+		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+		cvReleaseCapture(videoCaptureFile)
+		gobject.timeout_add(int(1000/fps), self.trim_ads_playback_handler)
 		return
 
 	def trim_ads_playback_handler(self):
