@@ -101,8 +101,8 @@ class VideoEditor:
 		self.fileChooserDialogResponse = self.fileChooserDialog.run()
 		if self.fileChooserDialogResponse== gtk.RESPONSE_OK : 
 			self.currentAdSelectedFullPathName = self.fileChooserDialog.get_filename()
+			self.processAdLoad
 		self.fileChooserDialog.destroy()
-		self.processAdLoad()
 		return	
 
 	def computeHash(self,frame):
