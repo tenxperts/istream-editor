@@ -50,7 +50,6 @@ class VideoEditor:
         	self.builder.add_from_file(self.gladeFile)
 
 		self.window = self.builder.get_object("MainWindow")
-		self.fileChooserDialog = self.builder.get_object("FileChooserDialog")
 		self.ad_dictionary = {}
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
@@ -63,8 +62,6 @@ class VideoEditor:
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
 				"on_MainMenuBar_ad_load_activate" : self.main_menu_bar_ad_load_activate,
-				"on_FileChooserDialog_file_activated" : self.file_chooser_dialog_file_activated,
-				"on_FileChooserDialog_delete_event" : self.file_chooser_dialog_delete_event,
 				"on_buttonPlay_clicked" : self.on_button_play_clicked,
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
@@ -88,29 +85,25 @@ class VideoEditor:
 	def main_menu_bar_file_open_activate(self, widget):		
 		self.file_open_mode = True
 		self.ad_load_mode = False
-		self.fileChooserDialog.show()
+		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		self.fileChooserDialogResponse=self.fileChooserDialog.run()
+		if self.fileChooserDialogResponse == gtk.RESPONSE_OK:	
+			self.currentFileSelectedFullPathName = self.fileChooserDialog.get_filename()
+		self.fileChooserDialog.destroy()
 		return	
 
 	def main_menu_bar_ad_load_activate(self, widget):
 		self.ad_load_mode = True
 		self.file_open_mode = False
-		self.fileChooserDialog.show()
-		return	
-
-	def file_chooser_dialog_file_activated(self, widget):	
-		if self.file_open_mode:	
-			self.fileChooserDialog.hide()
-			self.currentFileSelectedFullPathName = self.fileChooserDialog.get_filename()
-		elif self.ad_load_mode:
-			self.fileChooserDialog.hide()
+		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		self.fileChooserDialogResponse = self.fileChooserDialog.run()
+		if self.fileChooserDialogResponse== gtk.RESPONSE_OK : 
 			self.currentAdSelectedFullPathName = self.fileChooserDialog.get_filename()
-			self.processAdLoad()
+		self.fileChooserDialog.destroy()
+		self.processAdLoad()
 		return	
-
-	def file_chooser_dialog_delete_event(self, dialog, widget):	
-		print "delete event"
-		self.fileChooserDialog.hide_all()
-		return
 
 	def computeHash(self,frame):
 		im = adaptors.Ipl2PIL(frame)
@@ -145,7 +138,6 @@ class VideoEditor:
 		gobject.timeout_add(30, self.trim_ads_audio_playback_handler)
 		return
 
-	def video_playback_handler(self, capture):
 		frame = cvQueryFrame(capture)
         	if (frame == None):
         		cvReleaseCapture(capture)
