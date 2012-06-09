@@ -101,7 +101,7 @@ class VideoEditor:
 		self.fileChooserDialogResponse = self.fileChooserDialog.run()
 		if self.fileChooserDialogResponse== gtk.RESPONSE_OK : 
 			self.currentAdSelectedFullPathName = self.fileChooserDialog.get_filename()
-			self.processAdLoad
+			self.processAdLoad()
 		self.fileChooserDialog.destroy()
 		return	
 
@@ -121,13 +121,11 @@ class VideoEditor:
 	def processAdLoad(self):
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
 
-		#print "computed Hash ", computedHash
 		nFrames =  cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT )
 		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 		for i in range(1,fps):
                 	frame = cvQueryFrame(videoCaptureFile)
 			computedHash = self.computeHash(frame)
-			#print "nFrames ", nFrames
 			self.ad_dictionary[computedHash] = (self.currentAdSelectedFullPathName, nFrames-1)
 		cvReleaseCapture(videoCaptureFile)
 		return
@@ -154,7 +152,6 @@ class VideoEditor:
 		if (self.mp == None):
 			## create the reader object
 			self.mp=FFMpegReader()
-			#print "created an ffmpeg reader"
 			## open an audio video file
 			filenamearr = self.currentFileSelectedFullPathName.split(".")
 			self.mp.open(filenamearr[0] + "-copy." + filenamearr[1], TS_VIDEO_RGB24)
@@ -181,7 +178,6 @@ class VideoEditor:
 		if (self.mp == None):
 			## create the reader object
 			self.mp=FFMpegReader()
-			#print "created an ffmpeg reader"
 			## open an audio video file
 			filenamearr = self.currentFileSelectedFullPathName.split(".")
 			self.mp.open(filenamearr[0] + "-copy." + filenamearr[1], TS_VIDEO_RGB24)
@@ -193,14 +189,12 @@ class VideoEditor:
 
 			self.tracks[1].set_observer(self.ap.push_nowait)
 		self.mp.step()
-		#print "done one audio step"
 		return 1
 
 
 	def trim_ads_video_playback_handler(self, capture):
 		frame = cvQueryFrame(capture)
 		computedHash = self.computeHash(frame)
-		#print computedHash 
 		if (self.ad_dictionary.has_key(computedHash)):
 			(self.curr_ad_match_name, self.curr_ad_frames_to_skip) = self.ad_dictionary[computedHash] 
 			print "Found matching ad " + self.curr_ad_match_name
