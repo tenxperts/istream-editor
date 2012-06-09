@@ -230,6 +230,7 @@ class VideoEditor:
 		
 			if (self.adDictionary.has_key(computedHash)):
 				(self.currAdMatchName, self.currAdFramesToSkip) = self.adDictionary[computedHash] 
+				print "Found matching ad " , self.currAdMatchName, " will skip ", self.currAdFramesToSkip, " frames "
 				self.skipAdFrames = True
 				self.trimAdsAP._mute = True
 				for i in range (1,self.currAdFramesToSkip):
@@ -237,15 +238,9 @@ class VideoEditor:
 				self.skipAdFrames = False
 				self.trimAdsAP._mute = False
 
-		#if  not(self.skipAdFrames):
 		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
                 self.mainNotebookImagePlayback.queue_draw()
-		#elif (self.currAdFramesToSkip == 0):
-		#	self.skipAdFrames = False
-		#	self.trimAdsAP._mute = False
-		#else:
-		#	self.currAdFramesToSkip = self.currAdFramesToSkip - 1
 		return
 
 
