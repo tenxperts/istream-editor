@@ -241,6 +241,18 @@
                 <property name="position">2</property>
               </packing>
             </child>
+            <child>
+              <widget class="GtkButton" id="buttonTrimAds">
+                <property name="label" translatable="yes">TrimAds</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_buttonTrimAds_clicked"/>
+              </widget>
+              <packing>
+                <property name="position">3</property>
+              </packing>
+            </child>
           </widget>
           <packing>
             <property name="expand">False</property>
