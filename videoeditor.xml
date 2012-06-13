@@ -148,12 +148,17 @@
         </child>
         <child>
           <object class="GtkHBox" id="hboxPlayBack">
+            <property name="width_request">400</property>
+            <property name="height_request">30</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="halign">center</property>
             <child>
               <object class="GtkButton" id="buttonPlay">
                 <property name="label" translatable="yes">Play
 </property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -161,8 +166,9 @@
                 <signal name="clicked" handler="on_buttonPlay_clicked" swapped="no"/>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
                 <property name="position">0</property>
               </packing>
             </child>
@@ -170,6 +176,8 @@
               <object class="GtkButton" id="buttonStop">
                 <property name="label" translatable="yes">Stop
 </property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -177,8 +185,8 @@
                 <signal name="clicked" handler="on_buttonStop_clicked" swapped="no"/>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -186,6 +194,8 @@
               <object class="GtkButton" id="buttonKMeans">
                 <property name="label" translatable="yes">KMeans
 </property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -193,23 +203,28 @@
                 <signal name="clicked" handler="on_buttonKMeans_clicked" swapped="no"/>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
                 <property name="position">2</property>
               </packing>
             </child>
             <child>
               <object class="GtkButton" id="buttonTrimAds">
                 <property name="label" translatable="yes">TrimAds</property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="margin_right">3</property>
                 <property name="use_action_appearance">False</property>
                 <signal name="clicked" handler="on_buttonTrimAds_clicked" swapped="no"/>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
                 <property name="position">3</property>
               </packing>
             </child>
