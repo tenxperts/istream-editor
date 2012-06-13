@@ -65,6 +65,8 @@ class VideoEditor:
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
+		self.scale = self.builder.get_object("scale")
+		self.currFilePlaybackFrameNum = 0
 		self.frameRGB = None
     		self.snd=None
 		self.playbackMpegReader = None
@@ -98,6 +100,11 @@ class VideoEditor:
 		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
                 self.mainNotebookImagePlayback.queue_draw()
+		self.currFilePlaybackFrameNum = self.currFilePlaybackFrameNum + 1
+		self.newFilePlaybackTimeInSeconds = int(self.currFilePlaybackFrameNum/self.currFilePlaybackFps)
+		if not (self.newFilePlaybackTimeInSeconds == self.currFilePlaybackTimeInSeconds):
+			self.scale.set_value(self.newFilePlaybackTimeInSeconds)
+			self.currFilePlaybackTimeInSeconds = self.newFilePlaybackTimeInSeconds
 		return
 
 		
@@ -173,8 +180,12 @@ class VideoEditor:
 		
 	def on_button_play_clicked(self, widget):
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
-		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
-		gobject.timeout_add(int(1000/fps), self.playback_handler)
+		self.currFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+		self.currFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
+		self.currFilePlaybackTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
+		self.scale.set_range(0, self.currFilePlaybackTimeInSeconds);
+		self.currFilePlaybackFrameNum= 0
+		gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
 		cvReleaseCapture(videoCaptureFile)
 
 
@@ -191,12 +202,9 @@ class VideoEditor:
 			self.playbackAP=AlsaSoundLazyPlayer(self.playbackMpegReaderTracks[1].get_samplerate(),self.playbackMpegReaderTracks[1].get_channels(),int(self.playbackMpegReaderTracks[0].get_fps()))
 			self.playbackMpegReaderTracks[1].set_observer(self.playbackAP.push_nowait)
 			self.playbackMpegReaderTracks[0].set_observer(self.displayframe)
-		try: 
-			self.playbackMpegReader.step()
-			return 1
-		except:
-			del playbackMpegReader
-			return 0
+		
+		self.playbackMpegReader.step()
+		return 1
 
 	def on_button_trim_ads_clicked(self, widget):
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);

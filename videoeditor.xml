@@ -131,6 +131,22 @@
           </packing>
         </child>
         <child>
+          <object class="GtkHScale" id="scale">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="halign">start</property>
+            <property name="valign">end</property>
+            <property name="adjustment">scale-adjustment</property>
+            <property name="round_digits">1</property>
+            <property name="digits">2</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkHBox" id="hboxPlayBack">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -201,22 +217,6 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkHScale" id="scale">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="halign">start</property>
-            <property name="valign">end</property>
-            <property name="adjustment">scale-adjustment</property>
-            <property name="round_digits">1</property>
-            <property name="digits">2</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
             <property name="position">3</property>
           </packing>
         </child>
