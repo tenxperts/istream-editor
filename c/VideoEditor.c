@@ -1,6 +1,8 @@
 # include <gtk/gtk.h>
 # include <glade/glade.h>
 
+
+
 int main ( int argc , char * argv [])
 {
 	GladeXML * xml ;

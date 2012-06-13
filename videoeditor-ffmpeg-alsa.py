@@ -9,11 +9,6 @@ import gobject
 import cv
 
 
-#Anshuman :added on 28 May 2012 : sha1 hash imports
-
-from hashlib import sha1
-
-
 import numpy
 
 
@@ -88,7 +83,8 @@ class VideoEditor:
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
 				"on_buttonTrimAds_clicked" : self.on_button_trim_ads_clicked,
-				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page}
+				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page
+				}
 			self.builder.connect_signals(dic)
 			self.window.show()
 		return
@@ -345,7 +341,6 @@ class VideoEditor:
 					editThumbnailsListStore.append((pixbuf,))
 				self.mainNotebookEditScrolledWindow.add(editThumbnailsIconView)
 		self.window.show_all()
-
 
 	def main(self):
 		gtk.main()
