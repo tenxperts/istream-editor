@@ -71,10 +71,12 @@ class VideoEditor:
     		self.snd=None
 		self.playbackMpegReader = None
 		self.playbackMpegReaderTracks = None
+		self.playbackTimer = None
 		self.adLoadMpegReader = None
 		self.adLoadMpegReaderTracks = None
 		self.trimAdsPlaybackMpegReader = None
 		self.trimAdsPlaybackMpegReaderTracks = None
+		self.trimAdsPlaaybackTimer = None
 		self.skipAdFrames = False
 		self.currAdFramesToSkip = 0
 		if (self.window):
@@ -185,7 +187,7 @@ class VideoEditor:
 		self.currFilePlaybackTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
 		self.scale.set_range(0, self.currFilePlaybackTimeInSeconds);
 		self.currFilePlaybackFrameNum= 0
-		gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
+		self.playbackTimer = gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
 		cvReleaseCapture(videoCaptureFile)
 
 
@@ -215,7 +217,7 @@ class VideoEditor:
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
 		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 		cvReleaseCapture(videoCaptureFile)
-		gobject.timeout_add(int(1000/fps), self.trim_ads_playback_handler)
+		self.trimAdsPlaybackTimer = gobject.timeout_add(int(1000/fps), self.trim_ads_playback_handler)
 		return
 
 	def trim_ads_playback_handler(self):
@@ -265,6 +267,22 @@ class VideoEditor:
 
 
 	def on_button_stop_clicked(self, widget):
+		# Remove timers for playback and trim Ads
+		if not (self.playbackTimer == None) :
+			gobject.source_remove(self.playbackTimer)
+  	        	self.playbackTimer = None
+		if not (self.trimAdsPlaybackTimer == None) :
+			gobject.source_remove(self.trimAdsPlaybackTimer)
+			self.trimAdsPlaybackTimer = None
+		# Remove reader objects for playback and trim Ads
+		if not (self.playbackMpegReader == None):
+			del self.playbackMpegReader
+			self.playbackMpegReader =None
+		if not (self.trimAdsPlaybackMpegReader == None):
+			del self.trimAdsPlaybackMpegReader
+			self.trimAdsPlaybackMpegReader =None
+		# Initialize playback scale to 0
+		self.scale.set_value(0)
 		return
 
 	def on_button_kmeans_clicked(self, widget):
