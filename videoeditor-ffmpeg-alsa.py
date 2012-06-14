@@ -76,7 +76,7 @@ class VideoEditor:
 		self.adLoadMpegReaderTracks = None
 		self.trimAdsPlaybackMpegReader = None
 		self.trimAdsPlaybackMpegReaderTracks = None
-		self.trimAdsPlaaybackTimer = None
+		self.trimAdsPlaybackTimer = None
 		self.skipAdFrames = False
 		self.currAdFramesToSkip = 0
 		if (self.window):
