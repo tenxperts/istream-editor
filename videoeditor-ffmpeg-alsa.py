@@ -202,9 +202,14 @@ class VideoEditor:
 			self.playbackAP=AlsaSoundLazyPlayer(self.playbackMpegReaderTracks[1].get_samplerate(),self.playbackMpegReaderTracks[1].get_channels(),int(self.playbackMpegReaderTracks[0].get_fps()))
 			self.playbackMpegReaderTracks[1].set_observer(self.playbackAP.push_nowait)
 			self.playbackMpegReaderTracks[0].set_observer(self.displayframe)
-		
-		self.playbackMpegReader.step()
-		return 1
+		try:	
+			self.playbackMpegReader.step()
+			return 1
+		except IOError:
+			del self.playbackMpegReader
+			self.playbackMpegReader = None
+			return 0
+			
 
 	def on_button_trim_ads_clicked(self, widget):
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
