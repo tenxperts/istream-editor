@@ -232,8 +232,13 @@ class VideoEditor:
 			self.trimAdsPlaybackMpegReaderTracks[1].set_observer(self.trimAdsAP.push_nowait)
 			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame)
 			return 1
-		self.trimAdsPlaybackMpegReader.step()
-		return 1
+		try:
+			self.trimAdsPlaybackMpegReader.step()
+			return 1
+		except IOError:
+			del self.trimAdsPlaybackMpegReader
+			self.trimAdsPlaybackMpegReader = None
+			return 0
 
 
     	def display_ads_trimmed_frame(self,thearray):
