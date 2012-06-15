@@ -68,11 +68,14 @@ class VideoEditor:
 		self.scale = self.builder.get_object("scale")
 		self.timeLabel = self.builder.get_object("timeLabel")
 		self.currFilePlaybackFrameNum = 0
+		self.currFilePlaybackCurrTimeInSeconds = 0
+		self.currFilePlaybackTotalTimeInSeconds = 0
 		self.frameRGB = None
     		self.snd=None
 		self.playbackMpegReader = None
 		self.playbackMpegReaderTracks = None
 		self.playbackTimer = None
+		self.playbackTimeInSecondsFromScale = 0
 		self.adLoadMpegReader = None
 		self.adLoadMpegReaderTracks = None
 		self.trimAdsPlaybackMpegReader = None
@@ -88,7 +91,8 @@ class VideoEditor:
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
 				"on_buttonTrimAds_clicked" : self.on_button_trim_ads_clicked,
-				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page
+				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page,
+				"on_scale_change_value" : self.on_scale_change_value
 				}
 			self.builder.connect_signals(dic)
 			self.window.show()
@@ -104,12 +108,12 @@ class VideoEditor:
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
                 self.mainNotebookImagePlayback.queue_draw()
 		self.currFilePlaybackFrameNum = self.currFilePlaybackFrameNum + 1
-		self.newFilePlaybackTimeInSeconds = int(self.currFilePlaybackFrameNum/self.currFilePlaybackFps)
-		if not (self.newFilePlaybackTimeInSeconds == self.currFilePlaybackTimeInSeconds):
-			self.newFilePlaybackTimeInHHMMSS = time.strftime('%H:%M:%S', time.gmtime(self.newFilePlaybackTimeInSeconds))
-			self.scale.set_value(self.newFilePlaybackTimeInSeconds)
-			self.timeLabel.set_text(self.newFilePlaybackTimeInHHMMSS)
-			self.currFilePlaybackTimeInSeconds = self.newFilePlaybackTimeInSeconds
+		self.currFilePlaybackNewTimeInSeconds = int(self.currFilePlaybackFrameNum/self.currFilePlaybackFps)
+		if not (self.currFilePlaybackNewTimeInSeconds == self.currFilePlaybackCurrTimeInSeconds):
+			self.currFilePlaybackNewTimeInHHMMSS = time.strftime('%H:%M:%S', time.gmtime(self.currFilePlaybackNewTimeInSeconds))
+			self.scale.set_value(self.currFilePlaybackNewTimeInSeconds)
+			self.timeLabel.set_text(self.currFilePlaybackNewTimeInHHMMSS)
+			self.currFilePlaybackCurrTimeInSeconds = self.currFilePlaybackNewTimeInSeconds
 		return
 
 		
@@ -187,8 +191,9 @@ class VideoEditor:
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
 		self.currFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 		self.currFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
-		self.currFilePlaybackTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
-		self.scale.set_range(0, self.currFilePlaybackTimeInSeconds);
+		self.currFilePlaybackTotalTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
+		self.currFilePlaybackCurrTimeInSeconds = 0
+		self.scale.set_range(0, self.currFilePlaybackTotalTimeInSeconds);
 		self.currFilePlaybackFrameNum= 0
 		self.playbackTimer = gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
 		cvReleaseCapture(videoCaptureFile)
@@ -208,7 +213,14 @@ class VideoEditor:
 			self.playbackMpegReaderTracks[1].set_observer(self.playbackAP.push_nowait)
 			self.playbackMpegReaderTracks[0].set_observer(self.displayframe)
 		try:	
-			self.playbackMpegReader.step()
+			if not (self.playbackTimeInSecondsFromScale == 0):
+				if not (self.playbackTimeInSecondsFromScale == self.currFilePlaybackCurrTimeInSeconds ):
+					self.currFilePlaybackFrameNum = self.playbackTimeInSecondsFromScale * self.currFilePlaybackFps
+					self.playbackMpegReaderTracks[0].seek_to_seconds(self.playbackTimeInSecondsFromScale)
+					self.playbackMpegReaderTracks[1].seek_to_seconds(self.playbackTimeInSecondsFromScale)
+					self.playbackTimeInSecondsFromScale = 0
+			else:
+				self.playbackMpegReader.step()
 			return 1
 		except IOError:
 			del self.playbackMpegReader
@@ -384,6 +396,13 @@ class VideoEditor:
 					editThumbnailsListStore.append((pixbuf,))
 				self.mainNotebookEditScrolledWindow.add(editThumbnailsIconView)
 		self.window.show_all()
+
+	def on_scale_change_value (self, widget, scroll, value):
+		self.playbackTimeInSecondsFromScale = int(value)
+		self.currFilePlaybackNewTimeInHHMMSS = time.strftime('%H:%M:%S', time.gmtime(self.playbackTimeInSecondsFromScale))
+		self.timeLabel.set_text(self.currFilePlaybackNewTimeInHHMMSS)
+		return	
+
 
 	def main(self):
 		gtk.main()

@@ -157,6 +157,7 @@
             <property name="round_digits">1</property>
             <property name="digits">2</property>
             <property name="draw_value">False</property>
+            <signal name="change-value" handler="on_scale_change_value" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
