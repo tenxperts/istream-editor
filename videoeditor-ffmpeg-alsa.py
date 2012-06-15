@@ -8,13 +8,13 @@ from opencv import adaptors
 import gobject
 import cv
 
-
 import numpy
-
 
 from pyffmpeg import *
 
 import alsaaudio
+
+import time
 
 TS_VIDEO_RGB24={ 'video1':(0, -1, {'pixel_format':PixelFormats.RGB24}), 'audio1':(1,-1,{})}
 
@@ -66,6 +66,7 @@ class VideoEditor:
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
 		self.scale = self.builder.get_object("scale")
+		self.timeLabel = self.builder.get_object("timeLabel")
 		self.currFilePlaybackFrameNum = 0
 		self.frameRGB = None
     		self.snd=None
@@ -105,7 +106,9 @@ class VideoEditor:
 		self.currFilePlaybackFrameNum = self.currFilePlaybackFrameNum + 1
 		self.newFilePlaybackTimeInSeconds = int(self.currFilePlaybackFrameNum/self.currFilePlaybackFps)
 		if not (self.newFilePlaybackTimeInSeconds == self.currFilePlaybackTimeInSeconds):
+			self.newFilePlaybackTimeInHHMMSS = time.strftime('%H:%M:%S', time.gmtime(self.newFilePlaybackTimeInSeconds))
 			self.scale.set_value(self.newFilePlaybackTimeInSeconds)
+			self.timeLabel.set_text(self.newFilePlaybackTimeInHHMMSS)
 			self.currFilePlaybackTimeInSeconds = self.newFilePlaybackTimeInSeconds
 		return
 
@@ -283,6 +286,7 @@ class VideoEditor:
 			self.trimAdsPlaybackMpegReader =None
 		# Initialize playback scale to 0
 		self.scale.set_value(0)
+		self.timeLabel.set_text("00:00:00")
 		return
 
 	def on_button_kmeans_clicked(self, widget):
