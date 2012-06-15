@@ -213,6 +213,9 @@ class VideoEditor:
 		except IOError:
 			del self.playbackMpegReader
 			self.playbackMpegReader = None
+			# Initialize playback scale to 0
+			self.scale.set_value(0)
+			self.timeLabel.set_text("00:00:00")
 			return 0
 			
 
