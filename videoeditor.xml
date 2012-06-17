@@ -139,6 +139,7 @@
             <property name="halign">start</property>
             <property name="xalign">0</property>
             <property name="yalign">0</property>
+            <property name="xpad">5</property>
             <property name="label" translatable="yes">00:00:00</property>
           </object>
           <packing>
@@ -175,8 +176,7 @@
             <property name="halign">center</property>
             <child>
               <object class="GtkButton" id="buttonPlay">
-                <property name="label" translatable="yes">Play
-</property>
+                <property name="label">Play</property>
                 <property name="width_request">80</property>
                 <property name="height_request">20</property>
                 <property name="visible">True</property>
@@ -207,7 +207,60 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="padding">10</property>
                 <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonPause">
+                <property name="label" translatable="yes">Pause</property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="on_button_pause_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonFastForward">
+                <property name="label" translatable="yes">&gt;&gt;</property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonRewind">
+                <property name="label" translatable="yes">&lt;&lt;</property>
+                <property name="width_request">80</property>
+                <property name="height_request">20</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -226,7 +279,7 @@
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">2</property>
+                <property name="position">5</property>
               </packing>
             </child>
             <child>
@@ -245,7 +298,7 @@
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">3</property>
+                <property name="position">6</property>
               </packing>
             </child>
           </object>

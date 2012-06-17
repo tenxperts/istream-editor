@@ -73,6 +73,7 @@ class VideoEditor:
 		self.frameRGB = None
     		self.snd=None
 		self.playbackMode = False
+		self.playbackPaused = False
 		self.playbackMpegReader = None
 		self.playbackMpegReaderTracks = None
 		self.playbackTimer = None
@@ -94,7 +95,8 @@ class VideoEditor:
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
 				"on_buttonTrimAds_clicked" : self.on_button_trim_ads_clicked,
 				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page,
-				"on_scale_change_value" : self.on_scale_change_value
+				"on_scale_change_value" : self.on_scale_change_value,
+				"on_button_pause_clicked" : self.on_button_pause_clicked,
 				}
 			self.builder.connect_signals(dic)
 			self.window.show()
@@ -191,15 +193,20 @@ class VideoEditor:
 		
 	def on_button_play_clicked(self, widget):
 		self.playbackMode = True
-		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
-		self.currFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
-		self.currFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
-		self.currFilePlaybackTotalTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
-		self.currFilePlaybackCurrTimeInSeconds = 0
-		self.scale.set_range(0, self.currFilePlaybackTotalTimeInSeconds);
-		self.currFilePlaybackFrameNum= 0
-		self.playbackTimer = gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
-		cvReleaseCapture(videoCaptureFile)
+		if not (self.playbackPaused):
+			videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
+			self.currFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+			self.currFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
+			self.currFilePlaybackTotalTimeInSeconds = int(self.currFilePlaybackNFrames/self.currFilePlaybackFps);
+			self.currFilePlaybackCurrTimeInSeconds = 0
+			self.scale.set_range(0, self.currFilePlaybackTotalTimeInSeconds);
+			self.currFilePlaybackFrameNum= 0
+			self.playbackTimer = gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
+			cvReleaseCapture(videoCaptureFile)
+		else:
+			self.playbackTimer = gobject.timeout_add(int(1000/self.currFilePlaybackFps), self.playback_handler)
+			self.playbackPaused = False
+			
 
 
 	def playback_handler(self):
@@ -437,7 +444,15 @@ class VideoEditor:
                 self.mainNotebookImagePlayback.queue_draw()
 		return 
 		
-	
+	def on_button_pause_clicked(self,widget):
+		self.playbackPaused = True
+		if not (self.playbackTimer == None) :
+			gobject.source_remove(self.playbackTimer)
+  	        	self.playbackTimer = None
+		if not (self.trimAdsPlaybackTimer == None) :
+			gobject.source_remove(self.trimAdsPlaybackTimer)
+  	        	self.trimAdsPlaybackTimer = None
+			
 		
 
 	def main(self):
