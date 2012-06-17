@@ -62,6 +62,7 @@ class VideoEditor:
 
 		self.adDictionary = {}
 		self.window = self.builder.get_object("MainWindow")
+		self.window.resize(720,640)
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
