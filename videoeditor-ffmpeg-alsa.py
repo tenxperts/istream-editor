@@ -72,10 +72,12 @@ class VideoEditor:
 		self.currFilePlaybackTotalTimeInSeconds = 0
 		self.frameRGB = None
     		self.snd=None
+		self.playbackMode = False
 		self.playbackMpegReader = None
 		self.playbackMpegReaderTracks = None
 		self.playbackTimer = None
 		self.playbackTimeInSecondsFromScale = 0
+		self.trimAdsPlaybackMode = False
 		self.adLoadMpegReader = None
 		self.adLoadMpegReaderTracks = None
 		self.trimAdsPlaybackMpegReader = None
@@ -188,6 +190,7 @@ class VideoEditor:
 		return
 		
 	def on_button_play_clicked(self, widget):
+		self.playbackMode = True
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
 		self.currFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 		self.currFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
@@ -228,10 +231,12 @@ class VideoEditor:
 			# Initialize playback scale to 0
 			self.scale.set_value(0)
 			self.timeLabel.set_text("00:00:00")
+			self.playbackMode = False
 			return 0
 			
 
 	def on_button_trim_ads_clicked(self, widget):
+		self.trimAdsPlaybackMode = True
 		videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
 		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 		cvReleaseCapture(videoCaptureFile)
@@ -258,6 +263,7 @@ class VideoEditor:
 		except IOError:
 			del self.trimAdsPlaybackMpegReader
 			self.trimAdsPlaybackMpegReader = None
+			self.trimAdsPlaybackMode = False
 			return 0
 
 
@@ -401,8 +407,38 @@ class VideoEditor:
 		self.playbackTimeInSecondsFromScale = int(value)
 		self.currFilePlaybackNewTimeInHHMMSS = time.strftime('%H:%M:%S', time.gmtime(self.playbackTimeInSecondsFromScale))
 		self.timeLabel.set_text(self.currFilePlaybackNewTimeInHHMMSS)
+		if not (self.playbackTimer == None) :
+			gobject.source_remove(self.playbackTimer)
+  	        	self.playbackTimer = None
+		if not (self.trimAdsPlaybackTimer == None) :
+			gobject.source_remove(self.trimAdsPlaybackTimer)
+  	        	self.trimAdsPlaybackTimer = None
+		if self.playbackMode:
+			if not(self.playbackMpegReader == None):
+				del self.playbackMpegReader
+			self.playbackMpegReader=FFMpegReader()
+			self.playbackMpegReader.open(self.currentFileSelectedFullPathName, TS_VIDEO_RGB24)
+			self.playbackMpegReaderTracks=self.playbackMpegReader.get_tracks()
+
+			## connect video to its device
+			self.playbackMpegReaderTracks[0].set_observer(self.displayFrameScaleChange)
+			self.playbackMpegReaderTracks[0].seek_to_seconds(self.playbackTimeInSecondsFromScale)
+			self.playbackMpegReader.step()
+				
+			del self.playbackMpegReader
+			self.playbackMpegReader = None
+						
+
 		return	
 
+	def displayFrameScaleChange(self, thearray):
+		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
+		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
+                self.mainNotebookImagePlayback.queue_draw()
+		return 
+		
+	
+		
 
 	def main(self):
 		gtk.main()
