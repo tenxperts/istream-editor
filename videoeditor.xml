@@ -80,12 +80,10 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScrolledWindow" id="MainNotebookEditScrolledWindow">
+              <object class="GtkImage" id="MainNotebookEditPlayback">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <child>
-                  <placeholder/>
-                </child>
+                <property name="can_focus">False</property>
+                <property name="pixbuf">VideoEditorSplash.jpeg</property>
               </object>
               <packing>
                 <property name="position">1</property>

@@ -18,10 +18,6 @@ public final class VideoEditor {
 			Gtk.init(args);
 			glade = Glade.parse("videoeditor.glade", "MainWindow");
 			MainWindow = (Window)glade.getWidget("MainWindow");
-			MainWindow.connect(new MainWindowListener() {
-				public void on_MainWindowDestroy(EventAny event) {
-				}
-			});
 			MainWindow.show();
 			Gtk.main();
 		}

@@ -148,51 +148,29 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkNotebook" id="MainNotebook">
+          <widget class="GtkFrame" id="MainFrame">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
+            <property name="label_xalign">0</property>
+            <property name="shadow_type">none</property>
             <child>
-              <widget class="GtkImage" id="MainNotebookImage">
+              <widget class="GtkAlignment" id="alignment1">
                 <property name="visible">True</property>
-                <property name="pixbuf">VideoEditorSplash.jpeg</property>
+                <property name="left_padding">12</property>
+                <child>
+                  <widget class="GtkImage" id="MainFrameImage">
+                    <property name="visible">True</property>
+                    <property name="pixbuf">VideoEditorSplash.jpeg</property>
+                  </widget>
+                </child>
               </widget>
             </child>
             <child>
               <widget class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Playback</property>
+                <property name="use_markup">True</property>
               </widget>
               <packing>
-                <property name="tab_fill">False</property>
-                <property name="type">tab</property>
-              </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <widget class="GtkLabel" id="label2">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Edit</property>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-                <property name="tab_fill">False</property>
-                <property name="type">tab</property>
-              </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <widget class="GtkLabel" id="label3">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">About</property>
-              </widget>
-              <packing>
-                <property name="position">2</property>
-                <property name="tab_fill">False</property>
-                <property name="type">tab</property>
+                <property name="type">label_item</property>
               </packing>
             </child>
           </widget>
@@ -223,34 +201,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_buttonStop_clicked"/>
               </widget>
               <packing>
                 <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkButton" id="buttonKMeans">
-                <property name="label" translatable="yes">KMeans</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_buttonKMeans_clicked"/>
-              </widget>
-              <packing>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkButton" id="buttonTrimAds">
-                <property name="label" translatable="yes">TrimAds</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_buttonTrimAds_clicked"/>
-              </widget>
-              <packing>
-                <property name="position">3</property>
               </packing>
             </child>
           </widget>

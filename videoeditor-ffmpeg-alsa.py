@@ -389,11 +389,14 @@ class VideoEditor:
 			
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBufNew)
                 self.mainNotebookImagePlayback.queue_draw()
+		return
 
-		
+	
+	def on_MainNotebook_switch_page(self, widget, page, page_num):
+		return	
 
 
-	def on_MainNotebook_switch_page (self, widget, page, page_num):
+	def on_MainNotebook_switch_page_algo (self, widget, page, page_num):
 		# We are in the edit tab => populate the list store and the icon view widgets 
 		if (page_num == 1):
 			#Call the algorithm for determining POI*/
@@ -410,6 +413,7 @@ class VideoEditor:
 					editThumbnailsListStore.append((pixbuf,))
 				self.mainNotebookEditScrolledWindow.add(editThumbnailsIconView)
 		self.window.show_all()
+		return
 
 	def on_scale_change_value (self, widget, scroll, value):
 		self.playbackTimeInSecondsFromScale = int(value)
@@ -453,6 +457,7 @@ class VideoEditor:
 		if not (self.trimAdsPlaybackTimer == None) :
 			gobject.source_remove(self.trimAdsPlaybackTimer)
   	        	self.trimAdsPlaybackTimer = None
+		return
 			
 		
 
