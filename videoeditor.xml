@@ -162,7 +162,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">4</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -176,7 +176,7 @@
               <object class="GtkButton" id="buttonPlay">
                 <property name="label">Play</property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -195,7 +195,7 @@
                 <property name="label" translatable="yes">Stop
 </property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -213,7 +213,7 @@
               <object class="GtkButton" id="buttonPause">
                 <property name="label" translatable="yes">Pause</property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -231,7 +231,7 @@
               <object class="GtkButton" id="buttonFastForward">
                 <property name="label" translatable="yes">&gt;&gt;</property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -248,7 +248,7 @@
               <object class="GtkButton" id="buttonRewind">
                 <property name="label" translatable="yes">&lt;&lt;</property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -266,7 +266,7 @@
                 <property name="label" translatable="yes">KMeans
 </property>
                 <property name="width_request">80</property>
-                <property name="height_request">20</property>
+                <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -304,6 +304,51 @@
             <property name="expand">False</property>
             <property name="fill">False</property>
             <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="hboxEdit">
+            <property name="width_request">800</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkButton" id="buttonInPoint">
+                <property name="label" translatable="yes">In</property>
+                <property name="width_request">80</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="buttonOutPoint">
+                <property name="label" translatable="yes">Out</property>
+                <property name="width_request">80</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="padding">10</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">5</property>
           </packing>
         </child>
       </object>

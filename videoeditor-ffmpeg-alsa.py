@@ -63,6 +63,8 @@ class VideoEditor:
 		self.adDictionary = {}
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(720,640)
+		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
+		self.hboxEdit = self.builder.get_object("hboxEdit")
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.mainNotebookEditScrolledWindow = self.builder.get_object("MainNotebookEditScrolledWindow")
@@ -393,6 +395,13 @@ class VideoEditor:
 
 	
 	def on_MainNotebook_switch_page(self, widget, page, page_num):
+		# We are in the edit tab => populate the list store and the icon view widgets 
+		if (page_num == 1):
+			self.hboxPlayBack.hide()
+			self.hboxEdit.show()
+		elif (page_num == 0):
+			self.hboxPlayBack.show()
+			self.hboxEdit.hide()
 		return	
 
 
