@@ -64,6 +64,11 @@ class VideoEditor:
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(720,640)
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
+		self.hboxEditArrow = self.builder.get_object("hboxEditArrow")
+		self.hboxCompose = self.builder.get_object("hboxCompose")
+		self.hboxPlayBack.show()
+		self.hboxEditArrow.hide()
+		self.hboxCompose.hide()
 		self.hboxEdit = self.builder.get_object("hboxEdit")
 		self.mainFrameImage = self.builder.get_object("MainFrameImage")
 		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
@@ -97,9 +102,15 @@ class VideoEditor:
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
 				"on_buttonTrimAds_clicked" : self.on_button_trim_ads_clicked,
+				"on_button_compose_pane_vbox_add_clicked" : self.on_button_compose_pane_vbox_add_clicked,
+				"on_button_add_clicked" : self.on_button_add_clicked,
+				"on_button_export_clicked" : self.on_button_export_clicked,
 				"on_MainNotebook_switch_page" : self.on_MainNotebook_switch_page,
 				"on_scale_change_value" : self.on_scale_change_value,
 				"on_button_pause_clicked" : self.on_button_pause_clicked,
+				"on_button_in_clicked" : self.on_button_in_clicked,
+				"on_button_out_clicked" : self.on_button_out_clicked,
+				"on_scale_motion_notify_event" : self.on_scale_motion_notify_event
 				}
 			self.builder.connect_signals(dic)
 			self.window.show()
@@ -395,12 +406,20 @@ class VideoEditor:
 
 	
 	def on_MainNotebook_switch_page(self, widget, page, page_num):
-		# We are in the edit tab => populate the list store and the icon view widgets 
-		if (page_num == 1):
+		if (page_num == 2):
+			# We are in the compose tab 
 			self.hboxPlayBack.hide()
+			self.hboxEdit.hide()
+			self.hboxCompose.show()
+		if (page_num == 1):
+			# We are in the edit tab 
+			self.hboxPlayBack.hide()
+			self.hboxCompose.hide()
 			self.hboxEdit.show()
 		elif (page_num == 0):
+			# We are in the playback tab
 			self.hboxPlayBack.show()
+			self.hboxCompose.hide()
 			self.hboxEdit.hide()
 		return	
 
@@ -448,6 +467,9 @@ class VideoEditor:
 				
 			del self.playbackMpegReader
 			self.playbackMpegReader = None
+		
+		mouse_x, mouse_y =  widget.get_pointer()
+		print mouse_x, mouse_y
 						
 
 		return	
@@ -467,8 +489,43 @@ class VideoEditor:
 			gobject.source_remove(self.trimAdsPlaybackTimer)
   	        	self.trimAdsPlaybackTimer = None
 		return
+
+
+	def on_scale_motion_notify_event(self, widget, event):
+		return
+
+	def on_button_in_clicked (self, widget):
+		scaleValue = self.scale.get_value()
+		mouse_x, mouse_y = self.scale.get_pointer()
+		inArrow = gtk.Arrow(gtk.ARROW_UP, gtk.SHADOW_NONE)
+		inArrow.queue_draw_area(mouse_x, mouse_y, 10, 10)
+		self.hboxEditArrow.add(inArrow)
+		inArrow.show()
+		self.scale.add_mark(scaleValue, gtk.POS_BOTTOM, None)
+		return
 			
 		
+	def on_button_out_clicked (self, widget):
+		scaleValue = self.scale.get_value()
+		mouse_x, mouse_y = self.scale.get_pointer()
+		self.scale.add_mark(scaleValue, gtk.POS_BOTTOM, None)
+		return
+
+
+	def on_button_compose_pane_vbox_add_clicked (self, widget):
+		self.fileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+		self.fileChooserDialogResponse=self.fileChooserDialog.run()
+		if self.fileChooserDialogResponse == gtk.RESPONSE_OK:	
+			self.currentComposeFileSelectedFullPathName = self.fileChooserDialog.get_filename()
+		self.fileChooserDialog.destroy()
+		return
+
+	def on_button_add_clicked (self, widget):
+		return
+
+	def on_button_export_clicked (self, widget):
+		return
 
 	def main(self):
 		gtk.main()
