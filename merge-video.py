@@ -19,12 +19,12 @@ def add_video_stream(oc, codec_id):
 	c.contents.bit_rate = 400000
 	c.contents.width = 352
 	c.contents.height = 288
-	#c.contents.time_base.contents.den = STREAM_FRAME_RATE
+	c.contents.time_base.den = 25
 	c.contents.time_base.num = 1
 	c.contents.gop_size = 12
-	c.contents.pix_fmt = STREAM_PIX_FMT
+	c.contents.pix_fmt = PIX_FMT_YUV420P
 	
-	return 1	
+	return st
 
 av_register_all()
 
@@ -127,17 +127,20 @@ print pPacket1
 #open a file for writing
 
 fmt = av_guess_format(None, sys.argv[3], None)
+print fmt.contents.name, " ", fmt.contents.mime_type, " ", fmt.contents.video_codec
 oc=avformat_alloc_context()
-oc.contents.format = fmt
+oc.contents.oformat = fmt
 oc.contents.filename=sys.argv[3]
-add_video_stream(oc, fmt.contents.video_codec)
+print "flags ", oc.contents.oformat.contents.flags
+video_st = add_video_stream(oc, fmt.contents.video_codec)
+
 avio_open(oc.contents.pb, sys.argv[3], AVIO_FLAG_WRITE)
+ 
 
 
 while(av_read_frame(pFormatCtx1, pPacket1)>=0): 
 	if(packet1.stream_index==videoStream1): 
-		print "got video packet"
-		#av_interleaved_write_frame(oc, pPacket1);
+		av_write_frame(oc, pPacket1);
 		print "written packet to output"
 		'''
 		# Decode video frame
