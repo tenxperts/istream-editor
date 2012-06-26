@@ -8,7 +8,7 @@ from av import *
 from ctypes import *
 
 
-def add_video_stream(oc, codec_id):
+def add_video_stream(oc, codec_id, pFormatCtx1, pVideoCodecCtx1):
 	st = av_new_stream(oc,0);
 	if not st:
 		print "Could not allocate video stream"
@@ -132,7 +132,7 @@ oc=avformat_alloc_context()
 oc.contents.oformat = fmt
 oc.contents.filename=sys.argv[3]
 print "flags ", oc.contents.oformat.contents.flags
-video_st = add_video_stream(oc, fmt.contents.video_codec)
+video_st = add_video_stream(oc, fmt.contents.video_codec, pFormatCtx1, pVideoCodecCtx1 )
 
 avio_open(oc.contents.pb, sys.argv[3], AVIO_FLAG_WRITE)
  

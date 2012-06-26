@@ -1,0 +1,2613 @@
+=head1 NAME
+
+ffserver - ffserver video server
+
+=head1 SYNOPSIS
+
+ffserver [options]
+
+=head1 DESCRIPTION
+
+
+ffserver is a streaming server for both audio and video. It supports
+
+several live feeds, streaming from files and time shifting on live feeds
+(you can seek to positions in the past on each live feed, provided you
+specify a big enough feed storage in ffserver.conf).
+
+ffserver runs in daemon mode by default; that is, it puts itself in
+the background and detaches from its TTY, unless it is launched in
+debug mode or a NoDaemon option is specified in the configuration
+file.
+
+This documentation covers only the streaming aspects of ffserver /
+ffmpeg. All questions about parameters for ffmpeg, codec questions,
+etc. are not covered here. Read F<ffmpeg.html> for more
+information.
+
+
+=head2 How does it work?
+
+
+ffserver receives prerecorded files or FFM streams from some ffmpeg
+instance as input, then streams them over RTP/RTSP/HTTP.
+
+An ffserver instance will listen on some port as specified in the
+configuration file. You can launch one or more instances of ffmpeg and
+send one or more FFM streams to the port where ffserver is expecting
+to receive them. Alternately, you can make ffserver launch such ffmpeg
+instances at startup.
+
+Input streams are called feeds, and each one is specified by a E<lt>FeedE<gt>
+section in the configuration file.
+
+For each feed you can have different output streams in various
+formats, each one specified by a E<lt>StreamE<gt> section in the configuration
+file.
+
+
+=head2 Status stream
+
+
+ffserver supports an HTTP interface which exposes the current status
+of the server.
+
+Simply point your browser to the address of the special status stream
+specified in the configuration file.
+
+For example if you have:
+	
+	<Stream status.html>
+	Format status
+	
+	# Only allow local people to get the status
+	ACL allow localhost
+	ACL allow 192.168.0.0 192.168.255.255
+	</Stream>
+
+
+then the server will post a page with the status information when
+the special stream F<status.html> is requested.
+
+
+=head2 What can this do?
+
+
+When properly configured and running, you can capture video and audio in real
+time from a suitable capture card, and stream it out over the Internet to
+either Windows Media Player or RealAudio player (with some restrictions).
+
+It can also stream from files, though that is currently broken. Very often, a
+web server can be used to serve up the files just as well.
+
+It can stream prerecorded video from .ffm files, though it is somewhat tricky
+to make it work correctly.
+
+
+=head2 What do I need?
+
+
+I use Linux on a 900 MHz Duron with a cheapo Bt848 based TV capture card. I'm
+using stock Linux 2.4.17 with the stock drivers. [Actually that isn't true,
+I needed some special drivers for my motherboard-based sound card.]
+
+I understand that FreeBSD systems work just fine as well.
+
+
+=head2 How do I make it work?
+
+
+First, build the kit. It *really* helps to have installed LAME first. Then when
+you run the ffserver ./configure, make sure that you have the
+C<--enable-libmp3lame> flag turned on.
+
+LAME is important as it allows for streaming audio to Windows Media Player.
+Don't ask why the other audio types do not work.
+
+As a simple test, just run the following two command lines where INPUTFILE
+is some file which you can decode with ffmpeg:
+
+	
+	ffserver -f doc/ffserver.conf &
+	ffmpeg -i INPUTFILE http://localhost:8090/feed1.ffm
+
+
+At this point you should be able to go to your Windows machine and fire up
+Windows Media Player (WMP). Go to Open URL and enter
+
+	
+	    http://<linuxbox>:8090/test.asf
+
+
+You should (after a short delay) see video and hear audio.
+
+WARNING: trying to stream test1.mpg doesn't work with WMP as it tries to
+transfer the entire file before starting to play.
+The same is true of AVI files.
+
+
+=head2 What happens next?
+
+
+You should edit the ffserver.conf file to suit your needs (in terms of
+frame rates etc). Then install ffserver and ffmpeg, write a script to start
+them up, and off you go.
+
+
+=head2 Troubleshooting
+
+
+
+=head3 I don't hear any audio, but video is fine.
+
+
+Maybe you didn't install LAME, or got your ./configure statement wrong. Check
+the ffmpeg output to see if a line referring to MP3 is present. If not, then
+your configuration was incorrect. If it is, then maybe your wiring is not
+set up correctly. Maybe the sound card is not getting data from the right
+input source. Maybe you have a really awful audio interface (like I do)
+that only captures in stereo and also requires that one channel be flipped.
+If you are one of these people, then export 'AUDIO_FLIP_LEFT=1' before
+starting ffmpeg.
+
+
+=head3 The audio and video lose sync after a while.
+
+
+Yes, they do.
+
+
+=head3 After a long while, the video update rate goes way down in WMP.
+
+
+Yes, it does. Who knows why?
+
+
+=head3 WMP 6.4 behaves differently to WMP 7.
+
+
+Yes, it does. Any thoughts on this would be gratefully received. These
+differences extend to embedding WMP into a web page. [There are two
+object IDs that you can use: The old one, which does not play well, and
+the new one, which does (both tested on the same system). However,
+I suspect that the new one is not available unless you have installed WMP 7].
+
+
+=head2 What else can it do?
+
+
+You can replay video from .ffm files that was recorded earlier.
+However, there are a number of caveats, including the fact that the
+ffserver parameters must match the original parameters used to record the
+file. If they do not, then ffserver deletes the file before recording into it.
+(Now that I write this, it seems broken).
+
+You can fiddle with many of the codec choices and encoding parameters, and
+there are a bunch more parameters that you cannot control. Post a message
+to the mailing list if there are some 'must have' parameters. Look in
+ffserver.conf for a list of the currently available controls.
+
+It will automatically generate the ASX or RAM files that are often used
+in browsers. These files are actually redirections to the underlying ASF
+or RM file. The reason for this is that the browser often fetches the
+entire file before starting up the external viewer. The redirection files
+are very small and can be transferred quickly. [The stream itself is
+often 'infinite' and thus the browser tries to download it and never
+finishes.]
+
+
+=head2 Tips
+
+
+* When you connect to a live stream, most players (WMP, RA, etc) want to
+buffer a certain number of seconds of material so that they can display the
+signal continuously. However, ffserver (by default) starts sending data
+in realtime. This means that there is a pause of a few seconds while the
+buffering is being done by the player. The good news is that this can be
+cured by adding a '?buffer=5' to the end of the URL. This means that the
+stream should start 5 seconds in the past -- and so the first 5 seconds
+of the stream are sent as fast as the network will allow. It will then
+slow down to real time. This noticeably improves the startup experience.
+
+You can also add a 'Preroll 15' statement into the ffserver.conf that will
+add the 15 second prebuffering on all requests that do not otherwise
+specify a time. In addition, ffserver will skip frames until a key_frame
+is found. This further reduces the startup delay by not transferring data
+that will be discarded.
+
+* You may want to adjust the MaxBandwidth in the ffserver.conf to limit
+the amount of bandwidth consumed by live streams.
+
+
+=head2 Why does the ?buffer / Preroll stop working after a time?
+
+
+It turns out that (on my machine at least) the number of frames successfully
+grabbed is marginally less than the number that ought to be grabbed. This
+means that the timestamp in the encoded data stream gets behind realtime.
+This means that if you say 'Preroll 10', then when the stream gets 10
+or more seconds behind, there is no Preroll left.
+
+Fixing this requires a change in the internals of how timestamps are
+handled.
+
+
+=head2 Does the C<?date=> stuff work.
+
+
+Yes (subject to the limitation outlined above). Also note that whenever you
+start ffserver, it deletes the ffm file (if any parameters have changed),
+thus wiping out what you had recorded before.
+
+The format of the C<?date=xxxxxx> is fairly flexible. You should use one
+of the following formats (the 'T' is literal):
+
+	
+	* YYYY-MM-DDTHH:MM:SS     (localtime)
+	* YYYY-MM-DDTHH:MM:SSZ    (UTC)
+
+
+You can omit the YYYY-MM-DD, and then it refers to the current day. However
+note that B<?date=16:00:00> refers to 16:00 on the current day -- this
+may be in the future and so is unlikely to be useful.
+
+You use this by adding the ?date= to the end of the URL for the stream.
+For example:   B<http://localhost:8080/test.asf?date=2002-07-26T23:05:00>.
+
+=head1 OPTIONS
+
+
+All the numerical options, if not specified otherwise, accept in input
+a string representing a number, which may contain one of the
+International System number postfixes, for example 'K', 'M', 'G'.
+If 'i' is appended after the postfix, powers of 2 are used instead of
+powers of 10. The 'B' postfix multiplies the value for 8, and can be
+appended after another postfix or used alone. This allows using for
+example 'KB', 'MiB', 'G' and 'B' as postfix.
+
+Options which do not take arguments are boolean options, and set the
+corresponding value to true. They can be set to false by prefixing
+with "no" the option name, for example using "-nofoo" in the
+command line will set to false the boolean option with name "foo".
+
+
+
+=head2 Stream specifiers
+
+Some options are applied per-stream, e.g. bitrate or codec. Stream specifiers
+are used to precisely specify which stream(s) does a given option belong to.
+
+A stream specifier is a string generally appended to the option name and
+separated from it by a colon. E.g. C<-codec:a:1 ac3> option contains
+C<a:1> stream specifer, which matches the second audio stream. Therefore it
+would select the ac3 codec for the second audio stream.
+
+A stream specifier can match several stream, the option is then applied to all
+of them. E.g. the stream specifier in C<-b:a 128k> matches all audio
+streams.
+
+An empty stream specifier matches all streams, for example C<-codec copy>
+or C<-codec: copy> would copy all the streams without reencoding.
+
+Possible forms of stream specifiers are:
+
+=over 4
+
+
+=item I<stream_index>
+
+Matches the stream with this index. E.g. C<-threads:1 4> would set the
+thread count for the second stream to 4.
+
+=item I<stream_type>B<[:>I<stream_index>B<]>
+
+I<stream_type> is one of: 'v' for video, 'a' for audio, 's' for subtitle,
+'d' for data and 't' for attachments. If I<stream_index> is given, then
+matches stream number I<stream_index> of this type. Otherwise matches all
+streams of this type.
+
+=item B<p:>I<program_id>B<[:>I<stream_index>B<]>
+
+If I<stream_index> is given, then matches stream number I<stream_index> in
+program with id I<program_id>. Otherwise matches all streams in this program.
+
+=item B<#>I<stream_id>
+
+Matches the stream by format-specific ID.
+
+=back
+
+
+=head2 Generic options
+
+
+These options are shared amongst the av* tools.
+
+
+=over 4
+
+
+
+=item B<-L>
+
+Show license.
+
+
+=item B<-h, -?, -help, --help>
+
+Show help.
+
+
+=item B<-version>
+
+Show version.
+
+
+=item B<-formats>
+
+Show available formats.
+
+The fields preceding the format names have the following meanings:
+
+=over 4
+
+
+=item B<D>
+
+Decoding available
+
+=item B<E>
+
+Encoding available
+
+=back
+
+
+
+=item B<-codecs>
+
+Show available codecs.
+
+The fields preceding the codec names have the following meanings:
+
+=over 4
+
+
+=item B<D>
+
+Decoding available
+
+=item B<E>
+
+Encoding available
+
+=item B<V/A/S>
+
+Video/audio/subtitle codec
+
+=item B<S>
+
+Codec supports slices
+
+=item B<D>
+
+Codec supports direct rendering
+
+=item B<T>
+
+Codec can handle input truncated at random locations instead of only at frame boundaries
+
+=back
+
+
+
+=item B<-bsfs>
+
+Show available bitstream filters.
+
+
+=item B<-protocols>
+
+Show available protocols.
+
+
+=item B<-filters>
+
+Show available libavfilter filters.
+
+
+=item B<-pix_fmts>
+
+Show available pixel formats.
+
+
+=item B<-sample_fmts>
+
+Show available sample formats.
+
+
+=item B<-loglevel> I<loglevel> B<| -v> I<loglevel>
+
+Set the logging level used by the library.
+I<loglevel> is a number or a string containing one of the following values:
+
+=over 4
+
+
+=item B<quiet>
+
+
+=item B<panic>
+
+
+=item B<fatal>
+
+
+=item B<error>
+
+
+=item B<warning>
+
+
+=item B<info>
+
+
+=item B<verbose>
+
+
+=item B<debug>
+
+
+=back
+
+
+By default the program logs to stderr, if coloring is supported by the
+terminal, colors are used to mark errors and warnings. Log coloring
+can be disabled setting the environment variable
+B<AV_LOG_FORCE_NOCOLOR> or B<NO_COLOR>, or can be forced setting
+the environment variable B<AV_LOG_FORCE_COLOR>.
+The use of the environment variable B<NO_COLOR> is deprecated and
+will be dropped in a following FFmpeg version.
+
+
+=item B<-report>
+
+Dump full command line and console output to a file named
+C<I<program>-I<YYYYMMDD>-I<HHMMSS>.log> in the current
+directory.
+This file can be useful for bug reports.
+It also implies C<-loglevel verbose>.
+
+Note: setting the environment variable C<FFREPORT> to any value has the
+same effect.
+
+
+=item B<-cpuflags flags (>I<global>B<)>
+
+Allows setting and clearing cpu flags. This option is intended
+for testing. Do not use it unless you know what you're doing.
+	
+	ffmpeg -cpuflags -sse+mmx ...
+	ffmpeg -cpuflags mmx ...
+	ffmpeg -cpuflags 0 ...
+
+
+
+=back
+
+
+
+=head2 AVOptions
+
+
+These options are provided directly by the libavformat, libavdevice and
+libavcodec libraries. To see the list of available AVOptions, use the
+B<-help> option. They are separated into two categories:
+
+=over 4
+
+
+=item B<generic>
+
+These options can be set for any container, codec or device. Generic options
+are listed under AVFormatContext options for containers/devices and under
+AVCodecContext options for codecs.
+
+=item B<private>
+
+These options are specific to the given container, device or codec. Private
+options are listed under their corresponding containers/devices/codecs.
+
+=back
+
+
+For example to write an ID3v2.3 header instead of a default ID3v2.4 to
+an MP3 file, use the B<id3v2_version> private option of the MP3
+muxer:
+	
+	ffmpeg -i input.flac -id3v2_version 3 out.mp3
+
+
+All codec AVOptions are obviously per-stream, so the chapter on stream
+specifiers applies to them
+
+Note B<-nooption> syntax cannot be used for boolean AVOptions,
+use B<-option 0>/B<-option 1>.
+
+Note2 old undocumented way of specifying per-stream AVOptions by prepending
+v/a/s to the options name is now obsolete and will be removed soon.
+
+
+
+=head2 Codec AVOptions
+
+
+=over 4
+
+
+=item B<-b[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+set bitrate (in bits/s)
+
+=item B<-ab[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+set bitrate (in bits/s)
+
+=item B<-bt[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+Set video bitrate tolerance (in bits/s). In 1-pass mode, bitrate tolerance specifies how far ratecontrol is willing to deviate from the target average bitrate value. This is not related to min/max bitrate. Lowering tolerance too much has an adverse effect on quality.
+
+=item B<-flags[:stream_specifier]> I<flags> B<(>I<input/output,audio,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<mv4>
+
+use four motion vector by macroblock (mpeg4)
+
+=item B<qpel>
+
+use 1/4 pel motion compensation
+
+=item B<loop>
+
+use loop filter
+
+=item B<qscale>
+
+use fixed qscale
+
+=item B<gmc>
+
+use gmc
+
+=item B<mv0>
+
+always try a mb with mv=E<lt>0,0E<gt>
+
+=item B<input_preserved>
+
+
+
+=item B<pass1>
+
+use internal 2pass ratecontrol in first  pass mode
+
+=item B<pass2>
+
+use internal 2pass ratecontrol in second pass mode
+
+=item B<gray>
+
+only decode/encode grayscale
+
+=item B<emu_edge>
+
+don't draw edges
+
+=item B<psnr>
+
+error[?] variables will be set during encoding
+
+=item B<truncated>
+
+
+
+=item B<naq>
+
+normalize adaptive quantization
+
+=item B<ildct>
+
+use interlaced dct
+
+=item B<low_delay>
+
+force low delay
+
+=item B<global_header>
+
+place global headers in extradata instead of every keyframe
+
+=item B<bitexact>
+
+use only bitexact stuff (except (i)dct)
+
+=item B<aic>
+
+h263 advanced intra coding / mpeg4 ac prediction
+
+=item B<cbp>
+
+Deprecated, use mpegvideo private options instead
+
+=item B<qprd>
+
+Deprecated, use mpegvideo private options instead
+
+=item B<ilme>
+
+interlaced motion estimation
+
+=item B<cgop>
+
+closed gop
+
+=back
+
+
+=item B<-sub_id[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-me_method[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+set motion estimation method
+
+Possible values:
+
+=over 4
+
+
+=item B<zero>
+
+zero motion estimation (fastest)
+
+=item B<full>
+
+full motion estimation (slowest)
+
+=item B<epzs>
+
+EPZS motion estimation (default)
+
+=item B<esa>
+
+esa motion estimation (alias for full)
+
+=item B<tesa>
+
+tesa motion estimation
+
+=item B<dia>
+
+dia motion estimation (alias for epzs)
+
+=item B<log>
+
+log motion estimation
+
+=item B<phods>
+
+phods motion estimation
+
+=item B<x1>
+
+X1 motion estimation
+
+=item B<hex>
+
+hex motion estimation
+
+=item B<umh>
+
+umh motion estimation
+
+=item B<iter>
+
+iter motion estimation
+
+=back
+
+
+=item B<-extradata_size[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-time_base[:stream_specifier]> I<rational number> B<()>
+
+
+=item B<-g[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+set the group of picture size
+
+=item B<-ar[:stream_specifier]> I<integer> B<(>I<input/output,audio>B<)>
+
+set audio sampling rate (in Hz)
+
+=item B<-ac[:stream_specifier]> I<integer> B<(>I<input/output,audio>B<)>
+
+set number of audio channels
+
+=item B<-cutoff[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+set cutoff bandwidth
+
+=item B<-frame_size[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+
+=item B<-frame_number[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-delay[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-qcomp[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+video quantizer scale compression (VBR). Constant of ratecontrol equation. Recommended range for default rc_eq: 0.0-1.0
+
+=item B<-qblur[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+video quantizer scale blur (VBR)
+
+=item B<-qmin[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+min video quantizer scale (VBR)
+
+=item B<-qmax[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+max video quantizer scale (VBR)
+
+=item B<-qdiff[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+max difference between the quantizer scale (VBR)
+
+=item B<-bf[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+use 'frames' B frames
+
+=item B<-b_qfactor[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+qp factor between p and b frames
+
+=item B<-rc_strategy[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+ratecontrol method
+
+=item B<-b_strategy[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+strategy to choose between I/P/B-frames
+
+=item B<-ps[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+rtp payload size in bytes
+
+=item B<-mv_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-header_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-i_tex_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-p_tex_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-i_count[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-p_count[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-skip_count[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-misc_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-frame_bits[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-codec_tag[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-bug[:stream_specifier]> I<flags> B<(>I<input,video>B<)>
+
+workaround not auto detected encoder bugs
+
+Possible values:
+
+=over 4
+
+
+=item B<autodetect>
+
+
+
+=item B<old_msmpeg4>
+
+some old lavc generated msmpeg4v3 files (no autodetection)
+
+=item B<xvid_ilace>
+
+Xvid interlacing bug (autodetected if fourcc==XVIX)
+
+=item B<ump4>
+
+(autodetected if fourcc==UMP4)
+
+=item B<no_padding>
+
+padding bug (autodetected)
+
+=item B<amv>
+
+
+
+=item B<ac_vlc>
+
+illegal vlc bug (autodetected per fourcc)
+
+=item B<qpel_chroma>
+
+
+
+=item B<std_qpel>
+
+old standard qpel (autodetected per fourcc/version)
+
+=item B<qpel_chroma2>
+
+
+
+=item B<direct_blocksize>
+
+direct-qpel-blocksize bug (autodetected per fourcc/version)
+
+=item B<edge>
+
+edge padding bug (autodetected per fourcc/version)
+
+=item B<hpel_chroma>
+
+
+
+=item B<dc_clip>
+
+
+
+=item B<ms>
+
+workaround various bugs in microsofts broken decoders
+
+=item B<trunc>
+
+trancated frames
+
+=back
+
+
+=item B<-lelim[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+single coefficient elimination threshold for luminance (negative values also consider dc coefficient)
+
+=item B<-celim[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+single coefficient elimination threshold for chrominance (negative values also consider dc coefficient)
+
+=item B<-strict[:stream_specifier]> I<integer> B<(>I<input/output,audio,video>B<)>
+
+how strictly to follow the standards
+
+Possible values:
+
+=over 4
+
+
+=item B<very>
+
+strictly conform to a older more strict version of the spec or reference software
+
+=item B<strict>
+
+strictly conform to all the things in the spec no matter what consequences
+
+=item B<normal>
+
+
+
+=item B<unofficial>
+
+allow unofficial extensions
+
+=item B<experimental>
+
+allow non standardized experimental things
+
+=back
+
+
+=item B<-b_qoffset[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+qp offset between P and B frames
+
+=item B<-err_detect[:stream_specifier]> I<flags> B<(>I<input,audio,video>B<)>
+
+set error detection flags
+
+Possible values:
+
+=over 4
+
+
+=item B<crccheck>
+
+verify embedded CRCs
+
+=item B<bitstream>
+
+detect bitstream specification deviations
+
+=item B<buffer>
+
+detect improper bitstream length
+
+=item B<explode>
+
+abort decoding on minor error detection
+
+=item B<careful>
+
+consider things that violate the spec and have not been seen in the wild as errors
+
+=item B<compliant>
+
+consider all spec non compliancies as errors
+
+=item B<aggressive>
+
+consider things that a sane encoder shouldnt do as an error
+
+=back
+
+
+=item B<-has_b_frames[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-block_align[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-mpeg_quant[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+use MPEG quantizers instead of H.263
+
+=item B<-stats_out[:stream_specifier]> I<string> B<()>
+
+
+=item B<-qsquish[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+how to keep quantizer between qmin and qmax (0 = clip, 1 = use differentiable function)
+
+=item B<-rc_qmod_amp[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+experimental quantizer modulation
+
+=item B<-rc_qmod_freq[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+experimental quantizer modulation
+
+=item B<-rc_override_count[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-rc_eq[:stream_specifier]> I<string> B<(>I<output,video>B<)>
+
+Set rate control equation. When computing the expression, besides the standard functions defined in the section 'Expression Evaluation', the following functions are available: bits2qp(bits), qp2bits(qp). Also the following constants are available: iTex pTex tex mv fCode iCount mcVar var isI isP isB avgQP qComp avgIITex avgPITex avgPPTex avgBPTex avgTex.
+
+=item B<-maxrate[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+Set max bitrate tolerance (in bits/s). Requires bufsize to be set.
+
+=item B<-minrate[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+Set min bitrate tolerance (in bits/s). Most useful in setting up a CBR encode. It is of little use elsewise.
+
+=item B<-bufsize[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+set ratecontrol buffer size (in bits)
+
+=item B<-rc_buf_aggressivity[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+currently useless
+
+=item B<-i_qfactor[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+qp factor between P and I frames
+
+=item B<-i_qoffset[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+qp offset between P and I frames
+
+=item B<-rc_init_cplx[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+initial complexity for 1-pass encoding
+
+=item B<-dct[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+DCT algorithm
+
+Possible values:
+
+=over 4
+
+
+=item B<auto>
+
+autoselect a good one (default)
+
+=item B<fastint>
+
+fast integer
+
+=item B<int>
+
+accurate integer
+
+=item B<mmx>
+
+
+
+=item B<altivec>
+
+
+
+=item B<faan>
+
+floating point AAN DCT
+
+=back
+
+
+=item B<-lumi_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+compresses bright areas stronger than medium ones
+
+=item B<-tcplx_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+temporal complexity masking
+
+=item B<-scplx_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+spatial complexity masking
+
+=item B<-p_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+inter masking
+
+=item B<-dark_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+compresses dark areas stronger than medium ones
+
+=item B<-idct[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+select IDCT implementation
+
+Possible values:
+
+=over 4
+
+
+=item B<auto>
+
+
+
+=item B<int>
+
+
+
+=item B<simple>
+
+
+
+=item B<simplemmx>
+
+
+
+=item B<libmpeg2mmx>
+
+
+
+=item B<mmi>
+
+
+
+=item B<arm>
+
+
+
+=item B<altivec>
+
+
+
+=item B<sh4>
+
+
+
+=item B<simplearm>
+
+
+
+=item B<simplearmv5te>
+
+
+
+=item B<simplearmv6>
+
+
+
+=item B<simpleneon>
+
+
+
+=item B<simplealpha>
+
+
+
+=item B<h264>
+
+
+
+=item B<vp3>
+
+
+
+=item B<ipp>
+
+
+
+=item B<xvidmmx>
+
+
+
+=item B<faani>
+
+floating point AAN IDCT
+
+=back
+
+
+=item B<-slice_count[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-ec[:stream_specifier]> I<flags> B<(>I<input,video>B<)>
+
+set error concealment strategy
+
+Possible values:
+
+=over 4
+
+
+=item B<guess_mvs>
+
+iterative motion vector (MV) search (slow)
+
+=item B<deblock>
+
+use strong deblock filter for damaged MBs
+
+=back
+
+
+=item B<-bits_per_coded_sample[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-pred[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+prediction method
+
+Possible values:
+
+=over 4
+
+
+=item B<left>
+
+
+
+=item B<plane>
+
+
+
+=item B<median>
+
+
+
+=back
+
+
+=item B<-aspect[:stream_specifier]> I<rational number> B<(>I<output,video>B<)>
+
+sample aspect ratio
+
+=item B<-debug[:stream_specifier]> I<flags> B<(>I<input/output,audio,video,subtitles>B<)>
+
+print specific debug info
+
+Possible values:
+
+=over 4
+
+
+=item B<pict>
+
+picture info
+
+=item B<rc>
+
+rate control
+
+=item B<bitstream>
+
+
+
+=item B<mb_type>
+
+macroblock (MB) type
+
+=item B<qp>
+
+per-block quantization parameter (QP)
+
+=item B<mv>
+
+motion vector
+
+=item B<dct_coeff>
+
+
+
+=item B<skip>
+
+
+
+=item B<startcode>
+
+
+
+=item B<pts>
+
+
+
+=item B<er>
+
+error recognition
+
+=item B<mmco>
+
+memory management control operations (H.264)
+
+=item B<bugs>
+
+
+
+=item B<vis_qp>
+
+visualize quantization parameter (QP), lower QP are tinted greener
+
+=item B<vis_mb_type>
+
+visualize block types
+
+=item B<buffers>
+
+picture buffer allocations
+
+=item B<thread_ops>
+
+threading operations
+
+=back
+
+
+=item B<-vismv[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+visualize motion vectors (MVs)
+
+Possible values:
+
+=over 4
+
+
+=item B<pf>
+
+forward predicted MVs of P-frames
+
+=item B<bf>
+
+forward predicted MVs of B-frames
+
+=item B<bb>
+
+backward predicted MVs of B-frames
+
+=back
+
+
+=item B<-cmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+full pel me compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-subcmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+sub pel me compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-mbcmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+macroblock compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-ildctcmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+interlaced dct compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-dia_size[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+diamond type & size for motion estimation
+
+=item B<-last_pred[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+amount of motion predictors from the previous frame
+
+=item B<-preme[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+pre motion estimation
+
+=item B<-precmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+pre motion estimation compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-pre_dia_size[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+diamond type & size for motion estimation pre-pass
+
+=item B<-subq[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+sub pel motion estimation quality
+
+=item B<-dtg_active_format[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-me_range[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+limit motion vectors range (1023 for DivX player)
+
+=item B<-ibias[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+intra quant bias
+
+=item B<-pbias[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+inter quant bias
+
+=item B<-color_table_id[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-global_quality[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+
+=item B<-coder[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<vlc>
+
+variable length coder / huffman coder
+
+=item B<ac>
+
+arithmetic coder
+
+=item B<raw>
+
+raw (no encoding)
+
+=item B<rle>
+
+run-length coder
+
+=item B<deflate>
+
+deflate-based coder
+
+=back
+
+
+=item B<-context[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+context model
+
+=item B<-slice_flags[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-xvmc_acceleration[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-mbd[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+macroblock decision algorithm (high quality mode)
+
+Possible values:
+
+=over 4
+
+
+=item B<simple>
+
+use mbcmp (default)
+
+=item B<bits>
+
+use fewest bits
+
+=item B<rd>
+
+use best rate distortion
+
+=back
+
+
+=item B<-stream_codec_tag[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-sc_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+scene change threshold
+
+=item B<-lmin[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+min lagrange factor (VBR)
+
+=item B<-lmax[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+max lagrange factor (VBR)
+
+=item B<-nr[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+noise reduction
+
+=item B<-rc_init_occupancy[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+number of bits which should be loaded into the rc buffer before decoding starts
+
+=item B<-inter_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+
+=item B<-flags2[:stream_specifier]> I<flags> B<(>I<input/output,audio,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<fast>
+
+allow non spec compliant speedup tricks
+
+=item B<sgop>
+
+Deprecated, use mpegvideo private options instead
+
+=item B<noout>
+
+skip bitstream encoding
+
+=item B<local_header>
+
+place global headers at every keyframe instead of in extradata
+
+=item B<chunks>
+
+Frame data might be split into multiple chunks
+
+=item B<showall>
+
+Show all frames before the first keyframe
+
+=item B<skiprd>
+
+Deprecated, use mpegvideo private options instead
+
+=back
+
+
+=item B<-error[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+
+=item B<-qns[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+deprecated, use mpegvideo private options instead
+
+=item B<-threads[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<auto>
+
+detect a good number of threads
+
+=back
+
+
+=item B<-me_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+motion estimaton threshold
+
+=item B<-mb_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+macroblock threshold
+
+=item B<-dc[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+intra_dc_precision
+
+=item B<-nssew[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+nsse weight
+
+=item B<-skip_top[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+number of macroblock rows at the top which are skipped
+
+=item B<-skip_bottom[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+number of macroblock rows at the bottom which are skipped
+
+=item B<-profile[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<unknown>
+
+
+
+=item B<aac_main>
+
+
+
+=item B<aac_low>
+
+
+
+=item B<aac_ssr>
+
+
+
+=item B<aac_ltp>
+
+
+
+=item B<dts>
+
+
+
+=item B<dts_es>
+
+
+
+=item B<dts_96_24>
+
+
+
+=item B<dts_hd_hra>
+
+
+
+=item B<dts_hd_ma>
+
+
+
+=back
+
+
+=item B<-level[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<unknown>
+
+
+
+=back
+
+
+=item B<-lowres[:stream_specifier]> I<integer> B<(>I<input,audio,video>B<)>
+
+decode at 1= 1/2, 2=1/4, 3=1/8 resolutions
+
+=item B<-skip_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+frame skip threshold
+
+=item B<-skip_factor[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+frame skip factor
+
+=item B<-skip_exp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+frame skip exponent
+
+=item B<-skipcmp[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+frame skip compare function
+
+Possible values:
+
+=over 4
+
+
+=item B<sad>
+
+sum of absolute differences, fast (default)
+
+=item B<sse>
+
+sum of squared errors
+
+=item B<satd>
+
+sum of absolute Hadamard transformed differences
+
+=item B<dct>
+
+sum of absolute DCT transformed differences
+
+=item B<psnr>
+
+sum of squared quantization errors (avoid, low quality)
+
+=item B<bit>
+
+number of bits needed for the block
+
+=item B<rd>
+
+rate distortion optimal, slow
+
+=item B<zero>
+
+0
+
+=item B<vsad>
+
+sum of absolute vertical differences
+
+=item B<vsse>
+
+sum of squared vertical differences
+
+=item B<nsse>
+
+noise preserving sum of squared differences
+
+=item B<dctmax>
+
+
+
+=item B<chroma>
+
+
+
+=back
+
+
+=item B<-border_mask[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+increases the quantizer for macroblocks close to borders
+
+=item B<-mblmin[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+min macroblock lagrange factor (VBR)
+
+=item B<-mblmax[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+max macroblock lagrange factor (VBR)
+
+=item B<-mepc[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+motion estimation bitrate penalty compensation (1.0 = 256)
+
+=item B<-skip_loop_filter[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<none>
+
+
+
+=item B<default>
+
+
+
+=item B<noref>
+
+
+
+=item B<bidir>
+
+
+
+=item B<nokey>
+
+
+
+=item B<all>
+
+
+
+=back
+
+
+=item B<-skip_idct[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<none>
+
+
+
+=item B<default>
+
+
+
+=item B<noref>
+
+
+
+=item B<bidir>
+
+
+
+=item B<nokey>
+
+
+
+=item B<all>
+
+
+
+=back
+
+
+=item B<-skip_frame[:stream_specifier]> I<integer> B<(>I<input,video>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<none>
+
+
+
+=item B<default>
+
+
+
+=item B<noref>
+
+
+
+=item B<bidir>
+
+
+
+=item B<nokey>
+
+
+
+=item B<all>
+
+
+
+=back
+
+
+=item B<-bidir_refine[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+refine the two motion vectors used in bidirectional macroblocks
+
+=item B<-brd_scale[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+downscales frames for dynamic B-frame decision
+
+=item B<-keyint_min[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+minimum interval between IDR-frames
+
+=item B<-refs[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+reference frames to consider for motion compensation
+
+=item B<-chromaoffset[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+chroma qp offset from luma
+
+=item B<-trellis[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+rate-distortion optimal quantization
+
+=item B<-sc_factor[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+multiplied by qscale for each frame and added to scene_change_score
+
+=item B<-mv0_threshold[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+
+=item B<-b_sensitivity[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+adjusts sensitivity of b_frame_strategy 1
+
+=item B<-compression_level[:stream_specifier]> I<integer> B<(>I<output,audio,video>B<)>
+
+
+=item B<-min_prediction_order[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+
+=item B<-max_prediction_order[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+
+=item B<-timecode_frame_start[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+GOP timecode frame start number, in non drop frame format
+
+=item B<-request_channels[:stream_specifier]> I<integer> B<(>I<input,audio>B<)>
+
+set desired number of audio channels
+
+=item B<-bits_per_raw_sample[:stream_specifier]> I<integer> B<()>
+
+
+=item B<-channel_layout[:stream_specifier]> I<integer> B<(>I<input/output,audio>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=back
+
+
+=item B<-request_channel_layout[:stream_specifier]> I<integer> B<(>I<input,audio>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=back
+
+
+=item B<-rc_max_vbv_use[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+
+=item B<-rc_min_vbv_use[:stream_specifier]> I<float> B<(>I<output,video>B<)>
+
+
+=item B<-ticks_per_frame[:stream_specifier]> I<integer> B<(>I<input/output,audio,video>B<)>
+
+
+=item B<-color_primaries[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+=item B<-color_trc[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+=item B<-colorspace[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+=item B<-color_range[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+=item B<-chroma_sample_location[:stream_specifier]> I<integer> B<(>I<input/output,video>B<)>
+
+
+=item B<-log_level_offset[:stream_specifier]> I<integer> B<()>
+
+set the log level offset
+
+=item B<-slices[:stream_specifier]> I<integer> B<(>I<output,video>B<)>
+
+number of slices, used in parallelized encoding
+
+=item B<-thread_type[:stream_specifier]> I<flags> B<(>I<input/output,video>B<)>
+
+select multithreading type
+
+Possible values:
+
+=over 4
+
+
+=item B<slice>
+
+
+
+=item B<frame>
+
+
+
+=back
+
+
+=item B<-audio_service_type[:stream_specifier]> I<integer> B<(>I<output,audio>B<)>
+
+audio service type
+
+Possible values:
+
+=over 4
+
+
+=item B<ma>
+
+Main Audio Service
+
+=item B<ef>
+
+Effects
+
+=item B<vi>
+
+Visually Impaired
+
+=item B<hi>
+
+Hearing Impaired
+
+=item B<di>
+
+Dialogue
+
+=item B<co>
+
+Commentary
+
+=item B<em>
+
+Emergency
+
+=item B<vo>
+
+Voice Over
+
+=item B<ka>
+
+Karaoke
+
+=back
+
+
+=item B<-request_sample_fmt[:stream_specifier]> I<integer> B<(>I<input,audio>B<)>
+
+sample format audio decoders should prefer
+
+Possible values:
+
+=over 4
+
+
+=item B<u8>
+
+8-bit unsigned integer
+
+=item B<s16>
+
+16-bit signed integer
+
+=item B<s32>
+
+32-bit signed integer
+
+=item B<flt>
+
+32-bit float
+
+=item B<dbl>
+
+64-bit double
+
+=back
+
+
+=back
+
+
+
+=head2 Format AVOptions
+
+
+=over 4
+
+
+=item B<-avioflags> I<flags> B<(>I<input/output>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<direct>
+
+reduce buffering
+
+=back
+
+
+=item B<-probesize> I<integer> B<(>I<input>B<)>
+
+set probing size
+
+=item B<-packetsize> I<integer> B<(>I<output>B<)>
+
+set packet size
+
+=item B<-fflags> I<flags> B<(>I<input/output>B<)>
+
+
+Possible values:
+
+=over 4
+
+
+=item B<ignidx>
+
+ignore index
+
+=item B<genpts>
+
+generate pts
+
+=item B<nofillin>
+
+do not fill in missing values that can be exactly calculated
+
+=item B<noparse>
+
+disable AVParsers, this needs nofillin too
+
+=item B<igndts>
+
+ignore dts
+
+=item B<discardcorrupt>
+
+discard corrupted frames
+
+=item B<sortdts>
+
+try to interleave outputted packets by dts
+
+=item B<keepside>
+
+dont merge side data
+
+=item B<latm>
+
+enable RTP MP4A-LATM payload
+
+=back
+
+
+=item B<-analyzeduration> I<integer> B<(>I<input>B<)>
+
+how many microseconds are analyzed to estimate duration
+
+=item B<-cryptokey> I<hexadecimal string> B<(>I<input>B<)>
+
+decryption key
+
+=item B<-indexmem> I<integer> B<(>I<input>B<)>
+
+max memory used for timestamp index (per stream)
+
+=item B<-rtbufsize> I<integer> B<(>I<input>B<)>
+
+max memory used for buffering real-time frames
+
+=item B<-fdebug> I<flags> B<(>I<input/output>B<)>
+
+print specific debug info
+
+Possible values:
+
+=over 4
+
+
+=item B<ts>
+
+
+
+=back
+
+
+=item B<-max_delay> I<integer> B<(>I<input/output>B<)>
+
+maximum muxing or demuxing delay in microseconds
+
+=item B<-fpsprobesize> I<integer> B<(>I<input>B<)>
+
+number of frames used to probe fps
+
+=item B<-audio_preload> I<integer> B<(>I<output>B<)>
+
+microseconds by which audio packets should be interleaved earlier
+
+=item B<-chunk_duration> I<integer> B<(>I<output>B<)>
+
+microseconds for each chunk
+
+=item B<-chunk_size> I<integer> B<(>I<output>B<)>
+
+size in bytes for each chunk
+
+=item B<-f_err_detect> I<flags> B<(>I<input>B<)>
+
+set error detection flags (deprecated; use err_detect, save via avconv)
+
+Possible values:
+
+=over 4
+
+
+=item B<crccheck>
+
+verify embedded CRCs
+
+=item B<bitstream>
+
+detect bitstream specification deviations
+
+=item B<buffer>
+
+detect improper bitstream length
+
+=item B<explode>
+
+abort decoding on minor error detection
+
+=item B<careful>
+
+consider things that violate the spec and have not been seen in the wild as errors
+
+=item B<compliant>
+
+consider all spec non compliancies as errors
+
+=item B<aggressive>
+
+consider things that a sane encoder shouldnt do as an error
+
+=back
+
+
+=item B<-err_detect> I<flags> B<(>I<input>B<)>
+
+set error detection flags
+
+Possible values:
+
+=over 4
+
+
+=item B<crccheck>
+
+verify embedded CRCs
+
+=item B<bitstream>
+
+detect bitstream specification deviations
+
+=item B<buffer>
+
+detect improper bitstream length
+
+=item B<explode>
+
+abort decoding on minor error detection
+
+=item B<careful>
+
+consider things that violate the spec and have not been seen in the wild as errors
+
+=item B<compliant>
+
+consider all spec non compliancies as errors
+
+=item B<aggressive>
+
+consider things that a sane encoder shouldnt do as an error
+
+=back
+
+
+=back
+
+
+
+=head2 Main options
+
+
+
+=over 4
+
+
+=item B<-f> I<configfile>
+
+Use F<configfile> instead of F</etc/ffserver.conf>.
+
+=item B<-n>
+
+Enable no-launch mode. This option disables all the Launch directives
+within the various E<lt>StreamE<gt> sections. Since ffserver will not launch
+any ffmpeg instances, you will have to launch them manually.
+
+=item B<-d>
+
+Enable debug mode. This option increases log verbosity, directs log
+messages to stdout and causes ffserver to run in the foreground
+rather than as a daemon.
+
+=back
+
+
+=head1 SEE ALSO
+
+
+ffmpeg(1), ffplay(1), ffprobe(1), the F<ffserver.conf>
+example and the FFmpeg HTML documentation
+
+=head1 AUTHORS
+
+The FFmpeg developers
+

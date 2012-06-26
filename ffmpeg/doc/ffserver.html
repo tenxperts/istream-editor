@@ -1,0 +1,1833 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on June 22, 2012 by texi2html 1.82 -->
+<!--
+texi2html was written by: 
+            Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people.
+Send bugs and suggestions to <texi2html-bug@nongnu.org>
+
+-->
+<head>
+<title>FFmpeg documentation : : </title>
+
+<meta name="description" content=": ">
+<meta name="keywords" content="FFmpeg documentation : : ">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.82">
+
+<style type="text/css">
+<!--
+a.summary-letter { text-decoration: none }
+a { color: #2D6198; }
+a:visited { color: #884488; }
+h1 a, h2 a, h3 a { text-decoration: inherit; color: inherit; }
+p { margin-left: 1em; margin-right: 1em; }
+table { margin-left: 2em; }
+pre { margin-left: 2em; }
+#footer { text-align: center; }
+#body { margin-left: 1em; margin-right: 1em; }
+body { background-color: #313131; margin: 0; }
+
+#container {
+    background-color: white;
+    color: #202020;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+h1 {
+    background-color: #7BB37B;
+    border: 1px solid #6A996A;
+    color: #151515;
+    font-size: 1.2em;
+    padding-bottom: 0.2em;
+    padding-left: 0.4em;
+    padding-top: 0.2em;
+}
+
+h2 {
+    color: #313131;
+    font-size: 1.2em;
+}
+
+h3 {
+    color: #313131;
+    font-size: 0.8em;
+    margin-bottom: -8px;
+}
+
+.note {
+    margin: 1em;
+    border: 1px solid #bbc9d8;
+    background-color: #dde1e1;
+}
+
+.important {
+    margin: 1em;
+    border: 1px solid #d26767;
+    background-color: #f8e1e1;
+}
+
+-->
+</style>
+
+<link rel="icon" href="favicon.png" type="image/png" />
+<link rel="stylesheet" type="text/css" href="default.css" />
+
+</head>
+
+<body >
+<div id="container">
+
+<div id="body">
+<a name="SEC_Top"></a>
+<h1 class="settitle">ffserver Documentation</h1>
+
+<a name="SEC_Contents"></a>
+<h1>Table of Contents</h1>
+<div class="contents">
+
+<ul class="toc">
+  <li><a name="toc-Synopsys" href="#Synopsys">1. Synopsys</a></li>
+  <li><a name="toc-Description" href="#Description">2. Description</a>
+  <ul class="toc">
+    <li><a name="toc-How-does-it-work_003f" href="#How-does-it-work_003f">2.1 How does it work?</a></li>
+    <li><a name="toc-Status-stream" href="#Status-stream">2.2 Status stream</a></li>
+    <li><a name="toc-What-can-this-do_003f" href="#What-can-this-do_003f">2.3 What can this do?</a></li>
+    <li><a name="toc-What-do-I-need_003f" href="#What-do-I-need_003f">2.4 What do I need?</a></li>
+    <li><a name="toc-How-do-I-make-it-work_003f" href="#How-do-I-make-it-work_003f">2.5 How do I make it work?</a></li>
+    <li><a name="toc-What-happens-next_003f" href="#What-happens-next_003f">2.6 What happens next?</a></li>
+    <li><a name="toc-Troubleshooting" href="#Troubleshooting">2.7 Troubleshooting</a>
+    <ul class="toc">
+      <li><a name="toc-I-don_0027t-hear-any-audio_002c-but-video-is-fine_002e" href="#I-don_0027t-hear-any-audio_002c-but-video-is-fine_002e">2.7.1 I don&rsquo;t hear any audio, but video is fine.</a></li>
+      <li><a name="toc-The-audio-and-video-lose-sync-after-a-while_002e" href="#The-audio-and-video-lose-sync-after-a-while_002e">2.7.2 The audio and video lose sync after a while.</a></li>
+      <li><a name="toc-After-a-long-while_002c-the-video-update-rate-goes-way-down-in-WMP_002e" href="#After-a-long-while_002c-the-video-update-rate-goes-way-down-in-WMP_002e">2.7.3 After a long while, the video update rate goes way down in WMP.</a></li>
+      <li><a name="toc-WMP-6_002e4-behaves-differently-to-WMP-7_002e" href="#WMP-6_002e4-behaves-differently-to-WMP-7_002e">2.7.4 WMP 6.4 behaves differently to WMP 7.</a></li>
+    </ul></li>
+    <li><a name="toc-What-else-can-it-do_003f" href="#What-else-can-it-do_003f">2.8 What else can it do?</a></li>
+    <li><a name="toc-Tips" href="#Tips">2.9 Tips</a></li>
+    <li><a name="toc-Why-does-the-_003fbuffer-_002f-Preroll-stop-working-after-a-time_003f" href="#Why-does-the-_003fbuffer-_002f-Preroll-stop-working-after-a-time_003f">2.10 Why does the ?buffer / Preroll stop working after a time?</a></li>
+    <li><a name="toc-Does-the-_003fdate_003d-stuff-work_002e" href="#Does-the-_003fdate_003d-stuff-work_002e">2.11 Does the <code>?date=</code> stuff work.</a></li>
+  </ul></li>
+  <li><a name="toc-Options" href="#Options">3. Options</a>
+  <ul class="toc">
+    <li><a name="toc-Stream-specifiers-1" href="#Stream-specifiers-1">3.1 Stream specifiers</a></li>
+    <li><a name="toc-Generic-options" href="#Generic-options">3.2 Generic options</a></li>
+    <li><a name="toc-AVOptions" href="#AVOptions">3.3 AVOptions</a></li>
+    <li><a name="toc-Codec-AVOptions" href="#Codec-AVOptions">3.4 Codec AVOptions</a></li>
+    <li><a name="toc-Format-AVOptions" href="#Format-AVOptions">3.5 Format AVOptions</a></li>
+    <li><a name="toc-Main-options" href="#Main-options">3.6 Main options</a></li>
+  </ul>
+</li>
+</ul>
+</div>
+
+<a name="Synopsys"></a>
+<h1 class="chapter"><a href="ffserver.html#toc-Synopsys">1. Synopsys</a></h1>
+
+<p>The generic syntax is:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">ffserver [options]
+</pre></td></tr></table>
+
+<a name="Description"></a>
+<h1 class="chapter"><a href="ffserver.html#toc-Description">2. Description</a></h1>
+
+<p>ffserver is a streaming server for both audio and video. It supports
+</p>
+<p>several live feeds, streaming from files and time shifting on live feeds
+(you can seek to positions in the past on each live feed, provided you
+specify a big enough feed storage in ffserver.conf).
+</p>
+<p>ffserver runs in daemon mode by default; that is, it puts itself in
+the background and detaches from its TTY, unless it is launched in
+debug mode or a NoDaemon option is specified in the configuration
+file.
+</p>
+<p>This documentation covers only the streaming aspects of ffserver /
+ffmpeg. All questions about parameters for ffmpeg, codec questions,
+etc. are not covered here. Read &lsquo;<tt>ffmpeg.html</tt>&rsquo; for more
+information.
+</p>
+<a name="How-does-it-work_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-How-does-it-work_003f">2.1 How does it work?</a></h2>
+
+<p>ffserver receives prerecorded files or FFM streams from some ffmpeg
+instance as input, then streams them over RTP/RTSP/HTTP.
+</p>
+<p>An ffserver instance will listen on some port as specified in the
+configuration file. You can launch one or more instances of ffmpeg and
+send one or more FFM streams to the port where ffserver is expecting
+to receive them. Alternately, you can make ffserver launch such ffmpeg
+instances at startup.
+</p>
+<p>Input streams are called feeds, and each one is specified by a &lt;Feed&gt;
+section in the configuration file.
+</p>
+<p>For each feed you can have different output streams in various
+formats, each one specified by a &lt;Stream&gt; section in the configuration
+file.
+</p>
+<a name="Status-stream"></a>
+<h2 class="section"><a href="ffserver.html#toc-Status-stream">2.2 Status stream</a></h2>
+
+<p>ffserver supports an HTTP interface which exposes the current status
+of the server.
+</p>
+<p>Simply point your browser to the address of the special status stream
+specified in the configuration file.
+</p>
+<p>For example if you have:
+</p><table><tr><td>&nbsp;</td><td><pre class="example">&lt;Stream status.html&gt;
+Format status
+
+# Only allow local people to get the status
+ACL allow localhost
+ACL allow 192.168.0.0 192.168.255.255
+&lt;/Stream&gt;
+</pre></td></tr></table>
+
+<p>then the server will post a page with the status information when
+the special stream &lsquo;<tt>status.html</tt>&rsquo; is requested.
+</p>
+<a name="What-can-this-do_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-What-can-this-do_003f">2.3 What can this do?</a></h2>
+
+<p>When properly configured and running, you can capture video and audio in real
+time from a suitable capture card, and stream it out over the Internet to
+either Windows Media Player or RealAudio player (with some restrictions).
+</p>
+<p>It can also stream from files, though that is currently broken. Very often, a
+web server can be used to serve up the files just as well.
+</p>
+<p>It can stream prerecorded video from .ffm files, though it is somewhat tricky
+to make it work correctly.
+</p>
+<a name="What-do-I-need_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-What-do-I-need_003f">2.4 What do I need?</a></h2>
+
+<p>I use Linux on a 900 MHz Duron with a cheapo Bt848 based TV capture card. I&rsquo;m
+using stock Linux 2.4.17 with the stock drivers. [Actually that isn&rsquo;t true,
+I needed some special drivers for my motherboard-based sound card.]
+</p>
+<p>I understand that FreeBSD systems work just fine as well.
+</p>
+<a name="How-do-I-make-it-work_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-How-do-I-make-it-work_003f">2.5 How do I make it work?</a></h2>
+
+<p>First, build the kit. It *really* helps to have installed LAME first. Then when
+you run the ffserver ./configure, make sure that you have the
+<code>--enable-libmp3lame</code> flag turned on.
+</p>
+<p>LAME is important as it allows for streaming audio to Windows Media Player.
+Don&rsquo;t ask why the other audio types do not work.
+</p>
+<p>As a simple test, just run the following two command lines where INPUTFILE
+is some file which you can decode with ffmpeg:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">ffserver -f doc/ffserver.conf &amp;
+ffmpeg -i INPUTFILE http://localhost:8090/feed1.ffm
+</pre></td></tr></table>
+
+<p>At this point you should be able to go to your Windows machine and fire up
+Windows Media Player (WMP). Go to Open URL and enter
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">    http://&lt;linuxbox&gt;:8090/test.asf
+</pre></td></tr></table>
+
+<p>You should (after a short delay) see video and hear audio.
+</p>
+<p>WARNING: trying to stream test1.mpg doesn&rsquo;t work with WMP as it tries to
+transfer the entire file before starting to play.
+The same is true of AVI files.
+</p>
+<a name="What-happens-next_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-What-happens-next_003f">2.6 What happens next?</a></h2>
+
+<p>You should edit the ffserver.conf file to suit your needs (in terms of
+frame rates etc). Then install ffserver and ffmpeg, write a script to start
+them up, and off you go.
+</p>
+<a name="Troubleshooting"></a>
+<h2 class="section"><a href="ffserver.html#toc-Troubleshooting">2.7 Troubleshooting</a></h2>
+
+<a name="I-don_0027t-hear-any-audio_002c-but-video-is-fine_002e"></a>
+<h3 class="subsection"><a href="ffserver.html#toc-I-don_0027t-hear-any-audio_002c-but-video-is-fine_002e">2.7.1 I don&rsquo;t hear any audio, but video is fine.</a></h3>
+
+<p>Maybe you didn&rsquo;t install LAME, or got your ./configure statement wrong. Check
+the ffmpeg output to see if a line referring to MP3 is present. If not, then
+your configuration was incorrect. If it is, then maybe your wiring is not
+set up correctly. Maybe the sound card is not getting data from the right
+input source. Maybe you have a really awful audio interface (like I do)
+that only captures in stereo and also requires that one channel be flipped.
+If you are one of these people, then export &rsquo;AUDIO_FLIP_LEFT=1&rsquo; before
+starting ffmpeg.
+</p>
+<a name="The-audio-and-video-lose-sync-after-a-while_002e"></a>
+<h3 class="subsection"><a href="ffserver.html#toc-The-audio-and-video-lose-sync-after-a-while_002e">2.7.2 The audio and video lose sync after a while.</a></h3>
+
+<p>Yes, they do.
+</p>
+<a name="After-a-long-while_002c-the-video-update-rate-goes-way-down-in-WMP_002e"></a>
+<h3 class="subsection"><a href="ffserver.html#toc-After-a-long-while_002c-the-video-update-rate-goes-way-down-in-WMP_002e">2.7.3 After a long while, the video update rate goes way down in WMP.</a></h3>
+
+<p>Yes, it does. Who knows why?
+</p>
+<a name="WMP-6_002e4-behaves-differently-to-WMP-7_002e"></a>
+<h3 class="subsection"><a href="ffserver.html#toc-WMP-6_002e4-behaves-differently-to-WMP-7_002e">2.7.4 WMP 6.4 behaves differently to WMP 7.</a></h3>
+
+<p>Yes, it does. Any thoughts on this would be gratefully received. These
+differences extend to embedding WMP into a web page. [There are two
+object IDs that you can use: The old one, which does not play well, and
+the new one, which does (both tested on the same system). However,
+I suspect that the new one is not available unless you have installed WMP 7].
+</p>
+<a name="What-else-can-it-do_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-What-else-can-it-do_003f">2.8 What else can it do?</a></h2>
+
+<p>You can replay video from .ffm files that was recorded earlier.
+However, there are a number of caveats, including the fact that the
+ffserver parameters must match the original parameters used to record the
+file. If they do not, then ffserver deletes the file before recording into it.
+(Now that I write this, it seems broken).
+</p>
+<p>You can fiddle with many of the codec choices and encoding parameters, and
+there are a bunch more parameters that you cannot control. Post a message
+to the mailing list if there are some &rsquo;must have&rsquo; parameters. Look in
+ffserver.conf for a list of the currently available controls.
+</p>
+<p>It will automatically generate the ASX or RAM files that are often used
+in browsers. These files are actually redirections to the underlying ASF
+or RM file. The reason for this is that the browser often fetches the
+entire file before starting up the external viewer. The redirection files
+are very small and can be transferred quickly. [The stream itself is
+often &rsquo;infinite&rsquo; and thus the browser tries to download it and never
+finishes.]
+</p>
+<a name="Tips"></a>
+<h2 class="section"><a href="ffserver.html#toc-Tips">2.9 Tips</a></h2>
+
+<p>* When you connect to a live stream, most players (WMP, RA, etc) want to
+buffer a certain number of seconds of material so that they can display the
+signal continuously. However, ffserver (by default) starts sending data
+in realtime. This means that there is a pause of a few seconds while the
+buffering is being done by the player. The good news is that this can be
+cured by adding a &rsquo;?buffer=5&rsquo; to the end of the URL. This means that the
+stream should start 5 seconds in the past &ndash; and so the first 5 seconds
+of the stream are sent as fast as the network will allow. It will then
+slow down to real time. This noticeably improves the startup experience.
+</p>
+<p>You can also add a &rsquo;Preroll 15&rsquo; statement into the ffserver.conf that will
+add the 15 second prebuffering on all requests that do not otherwise
+specify a time. In addition, ffserver will skip frames until a key_frame
+is found. This further reduces the startup delay by not transferring data
+that will be discarded.
+</p>
+<p>* You may want to adjust the MaxBandwidth in the ffserver.conf to limit
+the amount of bandwidth consumed by live streams.
+</p>
+<a name="Why-does-the-_003fbuffer-_002f-Preroll-stop-working-after-a-time_003f"></a>
+<h2 class="section"><a href="ffserver.html#toc-Why-does-the-_003fbuffer-_002f-Preroll-stop-working-after-a-time_003f">2.10 Why does the ?buffer / Preroll stop working after a time?</a></h2>
+
+<p>It turns out that (on my machine at least) the number of frames successfully
+grabbed is marginally less than the number that ought to be grabbed. This
+means that the timestamp in the encoded data stream gets behind realtime.
+This means that if you say &rsquo;Preroll 10&rsquo;, then when the stream gets 10
+or more seconds behind, there is no Preroll left.
+</p>
+<p>Fixing this requires a change in the internals of how timestamps are
+handled.
+</p>
+<a name="Does-the-_003fdate_003d-stuff-work_002e"></a>
+<h2 class="section"><a href="ffserver.html#toc-Does-the-_003fdate_003d-stuff-work_002e">2.11 Does the <code>?date=</code> stuff work.</a></h2>
+
+<p>Yes (subject to the limitation outlined above). Also note that whenever you
+start ffserver, it deletes the ffm file (if any parameters have changed),
+thus wiping out what you had recorded before.
+</p>
+<p>The format of the <code>?date=xxxxxx</code> is fairly flexible. You should use one
+of the following formats (the &rsquo;T&rsquo; is literal):
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">* YYYY-MM-DDTHH:MM:SS     (localtime)
+* YYYY-MM-DDTHH:MM:SSZ    (UTC)
+</pre></td></tr></table>
+
+<p>You can omit the YYYY-MM-DD, and then it refers to the current day. However
+note that &lsquo;<samp>?date=16:00:00</samp>&rsquo; refers to 16:00 on the current day &ndash; this
+may be in the future and so is unlikely to be useful.
+</p>
+<p>You use this by adding the ?date= to the end of the URL for the stream.
+For example:   &lsquo;<samp>http://localhost:8080/test.asf?date=2002-07-26T23:05:00</samp>&rsquo;.
+</p>
+<a name="Options"></a>
+<h1 class="chapter"><a href="ffserver.html#toc-Options">3. Options</a></h1>
+
+<p>All the numerical options, if not specified otherwise, accept in input
+a string representing a number, which may contain one of the
+International System number postfixes, for example &rsquo;K&rsquo;, &rsquo;M&rsquo;, &rsquo;G&rsquo;.
+If &rsquo;i&rsquo; is appended after the postfix, powers of 2 are used instead of
+powers of 10. The &rsquo;B&rsquo; postfix multiplies the value for 8, and can be
+appended after another postfix or used alone. This allows using for
+example &rsquo;KB&rsquo;, &rsquo;MiB&rsquo;, &rsquo;G&rsquo; and &rsquo;B&rsquo; as postfix.
+</p>
+<p>Options which do not take arguments are boolean options, and set the
+corresponding value to true. They can be set to false by prefixing
+with &quot;no&quot; the option name, for example using &quot;-nofoo&quot; in the
+command line will set to false the boolean option with name &quot;foo&quot;.
+</p>
+<p><a name="Stream-specifiers"></a>
+</p><a name="Stream-specifiers-1"></a>
+<h2 class="section"><a href="ffserver.html#toc-Stream-specifiers-1">3.1 Stream specifiers</a></h2>
+<p>Some options are applied per-stream, e.g. bitrate or codec. Stream specifiers
+are used to precisely specify which stream(s) does a given option belong to.
+</p>
+<p>A stream specifier is a string generally appended to the option name and
+separated from it by a colon. E.g. <code>-codec:a:1 ac3</code> option contains
+<code>a:1</code> stream specifer, which matches the second audio stream. Therefore it
+would select the ac3 codec for the second audio stream.
+</p>
+<p>A stream specifier can match several stream, the option is then applied to all
+of them. E.g. the stream specifier in <code>-b:a 128k</code> matches all audio
+streams.
+</p>
+<p>An empty stream specifier matches all streams, for example <code>-codec copy</code>
+or <code>-codec: copy</code> would copy all the streams without reencoding.
+</p>
+<p>Possible forms of stream specifiers are:
+</p><dl compact="compact">
+<dt> &lsquo;<samp><var>stream_index</var></samp>&rsquo;</dt>
+<dd><p>Matches the stream with this index. E.g. <code>-threads:1 4</code> would set the
+thread count for the second stream to 4.
+</p></dd>
+<dt> &lsquo;<samp><var>stream_type</var>[:<var>stream_index</var>]</samp>&rsquo;</dt>
+<dd><p><var>stream_type</var> is one of: &rsquo;v&rsquo; for video, &rsquo;a&rsquo; for audio, &rsquo;s&rsquo; for subtitle,
+&rsquo;d&rsquo; for data and &rsquo;t&rsquo; for attachments. If <var>stream_index</var> is given, then
+matches stream number <var>stream_index</var> of this type. Otherwise matches all
+streams of this type.
+</p></dd>
+<dt> &lsquo;<samp>p:<var>program_id</var>[:<var>stream_index</var>]</samp>&rsquo;</dt>
+<dd><p>If <var>stream_index</var> is given, then matches stream number <var>stream_index</var> in
+program with id <var>program_id</var>. Otherwise matches all streams in this program.
+</p></dd>
+<dt> &lsquo;<samp>#<var>stream_id</var></samp>&rsquo;</dt>
+<dd><p>Matches the stream by format-specific ID.
+</p></dd>
+</dl>
+<a name="Generic-options"></a>
+<h2 class="section"><a href="ffserver.html#toc-Generic-options">3.2 Generic options</a></h2>
+
+<p>These options are shared amongst the av* tools.
+</p>
+<dl compact="compact">
+<dt> &lsquo;<samp>-L</samp>&rsquo;</dt>
+<dd><p>Show license.
+</p>
+</dd>
+<dt> &lsquo;<samp>-h, -?, -help, --help</samp>&rsquo;</dt>
+<dd><p>Show help.
+</p>
+</dd>
+<dt> &lsquo;<samp>-version</samp>&rsquo;</dt>
+<dd><p>Show version.
+</p>
+</dd>
+<dt> &lsquo;<samp>-formats</samp>&rsquo;</dt>
+<dd><p>Show available formats.
+</p>
+<p>The fields preceding the format names have the following meanings:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>D</samp>&rsquo;</dt>
+<dd><p>Decoding available
+</p></dd>
+<dt> &lsquo;<samp>E</samp>&rsquo;</dt>
+<dd><p>Encoding available
+</p></dd>
+</dl>
+
+</dd>
+<dt> &lsquo;<samp>-codecs</samp>&rsquo;</dt>
+<dd><p>Show available codecs.
+</p>
+<p>The fields preceding the codec names have the following meanings:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>D</samp>&rsquo;</dt>
+<dd><p>Decoding available
+</p></dd>
+<dt> &lsquo;<samp>E</samp>&rsquo;</dt>
+<dd><p>Encoding available
+</p></dd>
+<dt> &lsquo;<samp>V/A/S</samp>&rsquo;</dt>
+<dd><p>Video/audio/subtitle codec
+</p></dd>
+<dt> &lsquo;<samp>S</samp>&rsquo;</dt>
+<dd><p>Codec supports slices
+</p></dd>
+<dt> &lsquo;<samp>D</samp>&rsquo;</dt>
+<dd><p>Codec supports direct rendering
+</p></dd>
+<dt> &lsquo;<samp>T</samp>&rsquo;</dt>
+<dd><p>Codec can handle input truncated at random locations instead of only at frame boundaries
+</p></dd>
+</dl>
+
+</dd>
+<dt> &lsquo;<samp>-bsfs</samp>&rsquo;</dt>
+<dd><p>Show available bitstream filters.
+</p>
+</dd>
+<dt> &lsquo;<samp>-protocols</samp>&rsquo;</dt>
+<dd><p>Show available protocols.
+</p>
+</dd>
+<dt> &lsquo;<samp>-filters</samp>&rsquo;</dt>
+<dd><p>Show available libavfilter filters.
+</p>
+</dd>
+<dt> &lsquo;<samp>-pix_fmts</samp>&rsquo;</dt>
+<dd><p>Show available pixel formats.
+</p>
+</dd>
+<dt> &lsquo;<samp>-sample_fmts</samp>&rsquo;</dt>
+<dd><p>Show available sample formats.
+</p>
+</dd>
+<dt> &lsquo;<samp>-loglevel <var>loglevel</var> | -v <var>loglevel</var></samp>&rsquo;</dt>
+<dd><p>Set the logging level used by the library.
+<var>loglevel</var> is a number or a string containing one of the following values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>quiet</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>panic</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>fatal</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>error</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>warning</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>info</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>verbose</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>debug</samp>&rsquo;</dt>
+</dl>
+
+<p>By default the program logs to stderr, if coloring is supported by the
+terminal, colors are used to mark errors and warnings. Log coloring
+can be disabled setting the environment variable
+<code>AV_LOG_FORCE_NOCOLOR</code> or <code>NO_COLOR</code>, or can be forced setting
+the environment variable <code>AV_LOG_FORCE_COLOR</code>.
+The use of the environment variable <code>NO_COLOR</code> is deprecated and
+will be dropped in a following FFmpeg version.
+</p>
+</dd>
+<dt> &lsquo;<samp>-report</samp>&rsquo;</dt>
+<dd><p>Dump full command line and console output to a file named
+<code><var>program</var>-<var>YYYYMMDD</var>-<var>HHMMSS</var>.log</code> in the current
+directory.
+This file can be useful for bug reports.
+It also implies <code>-loglevel verbose</code>.
+</p>
+<p>Note: setting the environment variable <code>FFREPORT</code> to any value has the
+same effect.
+</p>
+</dd>
+<dt> &lsquo;<samp>-cpuflags flags (<em>global</em>)</samp>&rsquo;</dt>
+<dd><p>Allows setting and clearing cpu flags. This option is intended
+for testing. Do not use it unless you know what you&rsquo;re doing.
+</p><table><tr><td>&nbsp;</td><td><pre class="example">ffmpeg -cpuflags -sse+mmx ...
+ffmpeg -cpuflags mmx ...
+ffmpeg -cpuflags 0 ...
+</pre></td></tr></table>
+
+</dd>
+</dl>
+
+<a name="AVOptions"></a>
+<h2 class="section"><a href="ffserver.html#toc-AVOptions">3.3 AVOptions</a></h2>
+
+<p>These options are provided directly by the libavformat, libavdevice and
+libavcodec libraries. To see the list of available AVOptions, use the
+&lsquo;<samp>-help</samp>&rsquo; option. They are separated into two categories:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>generic</samp>&rsquo;</dt>
+<dd><p>These options can be set for any container, codec or device. Generic options
+are listed under AVFormatContext options for containers/devices and under
+AVCodecContext options for codecs.
+</p></dd>
+<dt> &lsquo;<samp>private</samp>&rsquo;</dt>
+<dd><p>These options are specific to the given container, device or codec. Private
+options are listed under their corresponding containers/devices/codecs.
+</p></dd>
+</dl>
+
+<p>For example to write an ID3v2.3 header instead of a default ID3v2.4 to
+an MP3 file, use the &lsquo;<samp>id3v2_version</samp>&rsquo; private option of the MP3
+muxer:
+</p><table><tr><td>&nbsp;</td><td><pre class="example">ffmpeg -i input.flac -id3v2_version 3 out.mp3
+</pre></td></tr></table>
+
+<p>All codec AVOptions are obviously per-stream, so the chapter on stream
+specifiers applies to them
+</p>
+<p>Note &lsquo;<samp>-nooption</samp>&rsquo; syntax cannot be used for boolean AVOptions,
+use &lsquo;<samp>-option 0</samp>&rsquo;/&lsquo;<samp>-option 1</samp>&rsquo;.
+</p>
+<p>Note2 old undocumented way of specifying per-stream AVOptions by prepending
+v/a/s to the options name is now obsolete and will be removed soon.
+</p>
+
+<a name="Codec-AVOptions"></a>
+<h2 class="section"><a href="ffserver.html#toc-Codec-AVOptions">3.4 Codec AVOptions</a></h2>
+<dl compact="compact">
+<dt> &lsquo;<samp>-b[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>set bitrate (in bits/s)
+</p></dd>
+<dt> &lsquo;<samp>-ab[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dd><p>set bitrate (in bits/s)
+</p></dd>
+<dt> &lsquo;<samp>-bt[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>Set video bitrate tolerance (in bits/s). In 1-pass mode, bitrate tolerance specifies how far ratecontrol is willing to deviate from the target average bitrate value. This is not related to min/max bitrate. Lowering tolerance too much has an adverse effect on quality.
+</p></dd>
+<dt> &lsquo;<samp>-flags[:stream_specifier] <var>flags</var> (<em>input/output,audio,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>mv4</samp>&rsquo;</dt>
+<dd><p>use four motion vector by macroblock (mpeg4)
+</p></dd>
+<dt> &lsquo;<samp>qpel</samp>&rsquo;</dt>
+<dd><p>use 1/4 pel motion compensation
+</p></dd>
+<dt> &lsquo;<samp>loop</samp>&rsquo;</dt>
+<dd><p>use loop filter
+</p></dd>
+<dt> &lsquo;<samp>qscale</samp>&rsquo;</dt>
+<dd><p>use fixed qscale
+</p></dd>
+<dt> &lsquo;<samp>gmc</samp>&rsquo;</dt>
+<dd><p>use gmc
+</p></dd>
+<dt> &lsquo;<samp>mv0</samp>&rsquo;</dt>
+<dd><p>always try a mb with mv=&lt;0,0&gt;
+</p></dd>
+<dt> &lsquo;<samp>input_preserved</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>pass1</samp>&rsquo;</dt>
+<dd><p>use internal 2pass ratecontrol in first  pass mode
+</p></dd>
+<dt> &lsquo;<samp>pass2</samp>&rsquo;</dt>
+<dd><p>use internal 2pass ratecontrol in second pass mode
+</p></dd>
+<dt> &lsquo;<samp>gray</samp>&rsquo;</dt>
+<dd><p>only decode/encode grayscale
+</p></dd>
+<dt> &lsquo;<samp>emu_edge</samp>&rsquo;</dt>
+<dd><p>don&rsquo;t draw edges
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>error[?] variables will be set during encoding
+</p></dd>
+<dt> &lsquo;<samp>truncated</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>naq</samp>&rsquo;</dt>
+<dd><p>normalize adaptive quantization
+</p></dd>
+<dt> &lsquo;<samp>ildct</samp>&rsquo;</dt>
+<dd><p>use interlaced dct
+</p></dd>
+<dt> &lsquo;<samp>low_delay</samp>&rsquo;</dt>
+<dd><p>force low delay
+</p></dd>
+<dt> &lsquo;<samp>global_header</samp>&rsquo;</dt>
+<dd><p>place global headers in extradata instead of every keyframe
+</p></dd>
+<dt> &lsquo;<samp>bitexact</samp>&rsquo;</dt>
+<dd><p>use only bitexact stuff (except (i)dct)
+</p></dd>
+<dt> &lsquo;<samp>aic</samp>&rsquo;</dt>
+<dd><p>h263 advanced intra coding / mpeg4 ac prediction
+</p></dd>
+<dt> &lsquo;<samp>cbp</samp>&rsquo;</dt>
+<dd><p>Deprecated, use mpegvideo private options instead
+</p></dd>
+<dt> &lsquo;<samp>qprd</samp>&rsquo;</dt>
+<dd><p>Deprecated, use mpegvideo private options instead
+</p></dd>
+<dt> &lsquo;<samp>ilme</samp>&rsquo;</dt>
+<dd><p>interlaced motion estimation
+</p></dd>
+<dt> &lsquo;<samp>cgop</samp>&rsquo;</dt>
+<dd><p>closed gop
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-sub_id[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-me_method[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>set motion estimation method
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>zero motion estimation (fastest)
+</p></dd>
+<dt> &lsquo;<samp>full</samp>&rsquo;</dt>
+<dd><p>full motion estimation (slowest)
+</p></dd>
+<dt> &lsquo;<samp>epzs</samp>&rsquo;</dt>
+<dd><p>EPZS motion estimation (default)
+</p></dd>
+<dt> &lsquo;<samp>esa</samp>&rsquo;</dt>
+<dd><p>esa motion estimation (alias for full)
+</p></dd>
+<dt> &lsquo;<samp>tesa</samp>&rsquo;</dt>
+<dd><p>tesa motion estimation
+</p></dd>
+<dt> &lsquo;<samp>dia</samp>&rsquo;</dt>
+<dd><p>dia motion estimation (alias for epzs)
+</p></dd>
+<dt> &lsquo;<samp>log</samp>&rsquo;</dt>
+<dd><p>log motion estimation
+</p></dd>
+<dt> &lsquo;<samp>phods</samp>&rsquo;</dt>
+<dd><p>phods motion estimation
+</p></dd>
+<dt> &lsquo;<samp>x1</samp>&rsquo;</dt>
+<dd><p>X1 motion estimation
+</p></dd>
+<dt> &lsquo;<samp>hex</samp>&rsquo;</dt>
+<dd><p>hex motion estimation
+</p></dd>
+<dt> &lsquo;<samp>umh</samp>&rsquo;</dt>
+<dd><p>umh motion estimation
+</p></dd>
+<dt> &lsquo;<samp>iter</samp>&rsquo;</dt>
+<dd><p>iter motion estimation
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-extradata_size[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-time_base[:stream_specifier] <var>rational number</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-g[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>set the group of picture size
+</p></dd>
+<dt> &lsquo;<samp>-ar[:stream_specifier] <var>integer</var> (<em>input/output,audio</em>)</samp>&rsquo;</dt>
+<dd><p>set audio sampling rate (in Hz)
+</p></dd>
+<dt> &lsquo;<samp>-ac[:stream_specifier] <var>integer</var> (<em>input/output,audio</em>)</samp>&rsquo;</dt>
+<dd><p>set number of audio channels
+</p></dd>
+<dt> &lsquo;<samp>-cutoff[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dd><p>set cutoff bandwidth
+</p></dd>
+<dt> &lsquo;<samp>-frame_size[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-frame_number[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-delay[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-qcomp[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>video quantizer scale compression (VBR). Constant of ratecontrol equation. Recommended range for default rc_eq: 0.0-1.0
+</p></dd>
+<dt> &lsquo;<samp>-qblur[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>video quantizer scale blur (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-qmin[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>min video quantizer scale (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-qmax[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>max video quantizer scale (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-qdiff[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>max difference between the quantizer scale (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-bf[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>use &rsquo;frames&rsquo; B frames
+</p></dd>
+<dt> &lsquo;<samp>-b_qfactor[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>qp factor between p and b frames
+</p></dd>
+<dt> &lsquo;<samp>-rc_strategy[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>ratecontrol method
+</p></dd>
+<dt> &lsquo;<samp>-b_strategy[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>strategy to choose between I/P/B-frames
+</p></dd>
+<dt> &lsquo;<samp>-ps[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>rtp payload size in bytes
+</p></dd>
+<dt> &lsquo;<samp>-mv_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-header_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-i_tex_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-p_tex_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-i_count[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-p_count[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-skip_count[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-misc_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-frame_bits[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-codec_tag[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-bug[:stream_specifier] <var>flags</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd><p>workaround not auto detected encoder bugs
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>autodetect</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>old_msmpeg4</samp>&rsquo;</dt>
+<dd><p>some old lavc generated msmpeg4v3 files (no autodetection)
+</p></dd>
+<dt> &lsquo;<samp>xvid_ilace</samp>&rsquo;</dt>
+<dd><p>Xvid interlacing bug (autodetected if fourcc==XVIX)
+</p></dd>
+<dt> &lsquo;<samp>ump4</samp>&rsquo;</dt>
+<dd><p>(autodetected if fourcc==UMP4)
+</p></dd>
+<dt> &lsquo;<samp>no_padding</samp>&rsquo;</dt>
+<dd><p>padding bug (autodetected)
+</p></dd>
+<dt> &lsquo;<samp>amv</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>ac_vlc</samp>&rsquo;</dt>
+<dd><p>illegal vlc bug (autodetected per fourcc)
+</p></dd>
+<dt> &lsquo;<samp>qpel_chroma</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>std_qpel</samp>&rsquo;</dt>
+<dd><p>old standard qpel (autodetected per fourcc/version)
+</p></dd>
+<dt> &lsquo;<samp>qpel_chroma2</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>direct_blocksize</samp>&rsquo;</dt>
+<dd><p>direct-qpel-blocksize bug (autodetected per fourcc/version)
+</p></dd>
+<dt> &lsquo;<samp>edge</samp>&rsquo;</dt>
+<dd><p>edge padding bug (autodetected per fourcc/version)
+</p></dd>
+<dt> &lsquo;<samp>hpel_chroma</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dc_clip</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>ms</samp>&rsquo;</dt>
+<dd><p>workaround various bugs in microsofts broken decoders
+</p></dd>
+<dt> &lsquo;<samp>trunc</samp>&rsquo;</dt>
+<dd><p>trancated frames
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-lelim[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>single coefficient elimination threshold for luminance (negative values also consider dc coefficient)
+</p></dd>
+<dt> &lsquo;<samp>-celim[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>single coefficient elimination threshold for chrominance (negative values also consider dc coefficient)
+</p></dd>
+<dt> &lsquo;<samp>-strict[:stream_specifier] <var>integer</var> (<em>input/output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>how strictly to follow the standards
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>very</samp>&rsquo;</dt>
+<dd><p>strictly conform to a older more strict version of the spec or reference software
+</p></dd>
+<dt> &lsquo;<samp>strict</samp>&rsquo;</dt>
+<dd><p>strictly conform to all the things in the spec no matter what consequences
+</p></dd>
+<dt> &lsquo;<samp>normal</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>unofficial</samp>&rsquo;</dt>
+<dd><p>allow unofficial extensions
+</p></dd>
+<dt> &lsquo;<samp>experimental</samp>&rsquo;</dt>
+<dd><p>allow non standardized experimental things
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-b_qoffset[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>qp offset between P and B frames
+</p></dd>
+<dt> &lsquo;<samp>-err_detect[:stream_specifier] <var>flags</var> (<em>input,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>set error detection flags
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>crccheck</samp>&rsquo;</dt>
+<dd><p>verify embedded CRCs
+</p></dd>
+<dt> &lsquo;<samp>bitstream</samp>&rsquo;</dt>
+<dd><p>detect bitstream specification deviations
+</p></dd>
+<dt> &lsquo;<samp>buffer</samp>&rsquo;</dt>
+<dd><p>detect improper bitstream length
+</p></dd>
+<dt> &lsquo;<samp>explode</samp>&rsquo;</dt>
+<dd><p>abort decoding on minor error detection
+</p></dd>
+<dt> &lsquo;<samp>careful</samp>&rsquo;</dt>
+<dd><p>consider things that violate the spec and have not been seen in the wild as errors
+</p></dd>
+<dt> &lsquo;<samp>compliant</samp>&rsquo;</dt>
+<dd><p>consider all spec non compliancies as errors
+</p></dd>
+<dt> &lsquo;<samp>aggressive</samp>&rsquo;</dt>
+<dd><p>consider things that a sane encoder shouldnt do as an error
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-has_b_frames[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-block_align[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-mpeg_quant[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>use MPEG quantizers instead of H.263
+</p></dd>
+<dt> &lsquo;<samp>-stats_out[:stream_specifier] <var>string</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-qsquish[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>how to keep quantizer between qmin and qmax (0 = clip, 1 = use differentiable function)
+</p></dd>
+<dt> &lsquo;<samp>-rc_qmod_amp[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>experimental quantizer modulation
+</p></dd>
+<dt> &lsquo;<samp>-rc_qmod_freq[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>experimental quantizer modulation
+</p></dd>
+<dt> &lsquo;<samp>-rc_override_count[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-rc_eq[:stream_specifier] <var>string</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>Set rate control equation. When computing the expression, besides the standard functions defined in the section &rsquo;Expression Evaluation&rsquo;, the following functions are available: bits2qp(bits), qp2bits(qp). Also the following constants are available: iTex pTex tex mv fCode iCount mcVar var isI isP isB avgQP qComp avgIITex avgPITex avgPPTex avgBPTex avgTex.
+</p></dd>
+<dt> &lsquo;<samp>-maxrate[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>Set max bitrate tolerance (in bits/s). Requires bufsize to be set.
+</p></dd>
+<dt> &lsquo;<samp>-minrate[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>Set min bitrate tolerance (in bits/s). Most useful in setting up a CBR encode. It is of little use elsewise.
+</p></dd>
+<dt> &lsquo;<samp>-bufsize[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>set ratecontrol buffer size (in bits)
+</p></dd>
+<dt> &lsquo;<samp>-rc_buf_aggressivity[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>currently useless
+</p></dd>
+<dt> &lsquo;<samp>-i_qfactor[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>qp factor between P and I frames
+</p></dd>
+<dt> &lsquo;<samp>-i_qoffset[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>qp offset between P and I frames
+</p></dd>
+<dt> &lsquo;<samp>-rc_init_cplx[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>initial complexity for 1-pass encoding
+</p></dd>
+<dt> &lsquo;<samp>-dct[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>DCT algorithm
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>auto</samp>&rsquo;</dt>
+<dd><p>autoselect a good one (default)
+</p></dd>
+<dt> &lsquo;<samp>fastint</samp>&rsquo;</dt>
+<dd><p>fast integer
+</p></dd>
+<dt> &lsquo;<samp>int</samp>&rsquo;</dt>
+<dd><p>accurate integer
+</p></dd>
+<dt> &lsquo;<samp>mmx</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>altivec</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>faan</samp>&rsquo;</dt>
+<dd><p>floating point AAN DCT
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-lumi_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>compresses bright areas stronger than medium ones
+</p></dd>
+<dt> &lsquo;<samp>-tcplx_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>temporal complexity masking
+</p></dd>
+<dt> &lsquo;<samp>-scplx_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>spatial complexity masking
+</p></dd>
+<dt> &lsquo;<samp>-p_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>inter masking
+</p></dd>
+<dt> &lsquo;<samp>-dark_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>compresses dark areas stronger than medium ones
+</p></dd>
+<dt> &lsquo;<samp>-idct[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dd><p>select IDCT implementation
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>auto</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>int</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simple</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simplemmx</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>libmpeg2mmx</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>mmi</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>arm</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>altivec</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>sh4</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simplearm</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simplearmv5te</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simplearmv6</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simpleneon</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>simplealpha</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>h264</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>vp3</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>ipp</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>xvidmmx</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>faani</samp>&rsquo;</dt>
+<dd><p>floating point AAN IDCT
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-slice_count[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-ec[:stream_specifier] <var>flags</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd><p>set error concealment strategy
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>guess_mvs</samp>&rsquo;</dt>
+<dd><p>iterative motion vector (MV) search (slow)
+</p></dd>
+<dt> &lsquo;<samp>deblock</samp>&rsquo;</dt>
+<dd><p>use strong deblock filter for damaged MBs
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-bits_per_coded_sample[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-pred[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>prediction method
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>left</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>plane</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>median</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-aspect[:stream_specifier] <var>rational number</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>sample aspect ratio
+</p></dd>
+<dt> &lsquo;<samp>-debug[:stream_specifier] <var>flags</var> (<em>input/output,audio,video,subtitles</em>)</samp>&rsquo;</dt>
+<dd><p>print specific debug info
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>pict</samp>&rsquo;</dt>
+<dd><p>picture info
+</p></dd>
+<dt> &lsquo;<samp>rc</samp>&rsquo;</dt>
+<dd><p>rate control
+</p></dd>
+<dt> &lsquo;<samp>bitstream</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>mb_type</samp>&rsquo;</dt>
+<dd><p>macroblock (MB) type
+</p></dd>
+<dt> &lsquo;<samp>qp</samp>&rsquo;</dt>
+<dd><p>per-block quantization parameter (QP)
+</p></dd>
+<dt> &lsquo;<samp>mv</samp>&rsquo;</dt>
+<dd><p>motion vector
+</p></dd>
+<dt> &lsquo;<samp>dct_coeff</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>skip</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>startcode</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>pts</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>er</samp>&rsquo;</dt>
+<dd><p>error recognition
+</p></dd>
+<dt> &lsquo;<samp>mmco</samp>&rsquo;</dt>
+<dd><p>memory management control operations (H.264)
+</p></dd>
+<dt> &lsquo;<samp>bugs</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>vis_qp</samp>&rsquo;</dt>
+<dd><p>visualize quantization parameter (QP), lower QP are tinted greener
+</p></dd>
+<dt> &lsquo;<samp>vis_mb_type</samp>&rsquo;</dt>
+<dd><p>visualize block types
+</p></dd>
+<dt> &lsquo;<samp>buffers</samp>&rsquo;</dt>
+<dd><p>picture buffer allocations
+</p></dd>
+<dt> &lsquo;<samp>thread_ops</samp>&rsquo;</dt>
+<dd><p>threading operations
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-vismv[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd><p>visualize motion vectors (MVs)
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>pf</samp>&rsquo;</dt>
+<dd><p>forward predicted MVs of P-frames
+</p></dd>
+<dt> &lsquo;<samp>bf</samp>&rsquo;</dt>
+<dd><p>forward predicted MVs of B-frames
+</p></dd>
+<dt> &lsquo;<samp>bb</samp>&rsquo;</dt>
+<dd><p>backward predicted MVs of B-frames
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-cmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>full pel me compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-subcmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>sub pel me compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-mbcmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>macroblock compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-ildctcmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>interlaced dct compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-dia_size[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>diamond type &amp; size for motion estimation
+</p></dd>
+<dt> &lsquo;<samp>-last_pred[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>amount of motion predictors from the previous frame
+</p></dd>
+<dt> &lsquo;<samp>-preme[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>pre motion estimation
+</p></dd>
+<dt> &lsquo;<samp>-precmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>pre motion estimation compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-pre_dia_size[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>diamond type &amp; size for motion estimation pre-pass
+</p></dd>
+<dt> &lsquo;<samp>-subq[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>sub pel motion estimation quality
+</p></dd>
+<dt> &lsquo;<samp>-dtg_active_format[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-me_range[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>limit motion vectors range (1023 for DivX player)
+</p></dd>
+<dt> &lsquo;<samp>-ibias[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>intra quant bias
+</p></dd>
+<dt> &lsquo;<samp>-pbias[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>inter quant bias
+</p></dd>
+<dt> &lsquo;<samp>-color_table_id[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-global_quality[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-coder[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>vlc</samp>&rsquo;</dt>
+<dd><p>variable length coder / huffman coder
+</p></dd>
+<dt> &lsquo;<samp>ac</samp>&rsquo;</dt>
+<dd><p>arithmetic coder
+</p></dd>
+<dt> &lsquo;<samp>raw</samp>&rsquo;</dt>
+<dd><p>raw (no encoding)
+</p></dd>
+<dt> &lsquo;<samp>rle</samp>&rsquo;</dt>
+<dd><p>run-length coder
+</p></dd>
+<dt> &lsquo;<samp>deflate</samp>&rsquo;</dt>
+<dd><p>deflate-based coder
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-context[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>context model
+</p></dd>
+<dt> &lsquo;<samp>-slice_flags[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-xvmc_acceleration[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-mbd[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>macroblock decision algorithm (high quality mode)
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>simple</samp>&rsquo;</dt>
+<dd><p>use mbcmp (default)
+</p></dd>
+<dt> &lsquo;<samp>bits</samp>&rsquo;</dt>
+<dd><p>use fewest bits
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>use best rate distortion
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-stream_codec_tag[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-sc_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>scene change threshold
+</p></dd>
+<dt> &lsquo;<samp>-lmin[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>min lagrange factor (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-lmax[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>max lagrange factor (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-nr[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>noise reduction
+</p></dd>
+<dt> &lsquo;<samp>-rc_init_occupancy[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>number of bits which should be loaded into the rc buffer before decoding starts
+</p></dd>
+<dt> &lsquo;<samp>-inter_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-flags2[:stream_specifier] <var>flags</var> (<em>input/output,audio,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>fast</samp>&rsquo;</dt>
+<dd><p>allow non spec compliant speedup tricks
+</p></dd>
+<dt> &lsquo;<samp>sgop</samp>&rsquo;</dt>
+<dd><p>Deprecated, use mpegvideo private options instead
+</p></dd>
+<dt> &lsquo;<samp>noout</samp>&rsquo;</dt>
+<dd><p>skip bitstream encoding
+</p></dd>
+<dt> &lsquo;<samp>local_header</samp>&rsquo;</dt>
+<dd><p>place global headers at every keyframe instead of in extradata
+</p></dd>
+<dt> &lsquo;<samp>chunks</samp>&rsquo;</dt>
+<dd><p>Frame data might be split into multiple chunks
+</p></dd>
+<dt> &lsquo;<samp>showall</samp>&rsquo;</dt>
+<dd><p>Show all frames before the first keyframe
+</p></dd>
+<dt> &lsquo;<samp>skiprd</samp>&rsquo;</dt>
+<dd><p>Deprecated, use mpegvideo private options instead
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-error[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-qns[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>deprecated, use mpegvideo private options instead
+</p></dd>
+<dt> &lsquo;<samp>-threads[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>auto</samp>&rsquo;</dt>
+<dd><p>detect a good number of threads
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-me_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>motion estimaton threshold
+</p></dd>
+<dt> &lsquo;<samp>-mb_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>macroblock threshold
+</p></dd>
+<dt> &lsquo;<samp>-dc[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>intra_dc_precision
+</p></dd>
+<dt> &lsquo;<samp>-nssew[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>nsse weight
+</p></dd>
+<dt> &lsquo;<samp>-skip_top[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd><p>number of macroblock rows at the top which are skipped
+</p></dd>
+<dt> &lsquo;<samp>-skip_bottom[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd><p>number of macroblock rows at the bottom which are skipped
+</p></dd>
+<dt> &lsquo;<samp>-profile[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>unknown</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>aac_main</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>aac_low</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>aac_ssr</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>aac_ltp</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dts</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dts_es</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dts_96_24</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dts_hd_hra</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>dts_hd_ma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-level[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>unknown</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-lowres[:stream_specifier] <var>integer</var> (<em>input,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>decode at 1= 1/2, 2=1/4, 3=1/8 resolutions
+</p></dd>
+<dt> &lsquo;<samp>-skip_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>frame skip threshold
+</p></dd>
+<dt> &lsquo;<samp>-skip_factor[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>frame skip factor
+</p></dd>
+<dt> &lsquo;<samp>-skip_exp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>frame skip exponent
+</p></dd>
+<dt> &lsquo;<samp>-skipcmp[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>frame skip compare function
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>sad</samp>&rsquo;</dt>
+<dd><p>sum of absolute differences, fast (default)
+</p></dd>
+<dt> &lsquo;<samp>sse</samp>&rsquo;</dt>
+<dd><p>sum of squared errors
+</p></dd>
+<dt> &lsquo;<samp>satd</samp>&rsquo;</dt>
+<dd><p>sum of absolute Hadamard transformed differences
+</p></dd>
+<dt> &lsquo;<samp>dct</samp>&rsquo;</dt>
+<dd><p>sum of absolute DCT transformed differences
+</p></dd>
+<dt> &lsquo;<samp>psnr</samp>&rsquo;</dt>
+<dd><p>sum of squared quantization errors (avoid, low quality)
+</p></dd>
+<dt> &lsquo;<samp>bit</samp>&rsquo;</dt>
+<dd><p>number of bits needed for the block
+</p></dd>
+<dt> &lsquo;<samp>rd</samp>&rsquo;</dt>
+<dd><p>rate distortion optimal, slow
+</p></dd>
+<dt> &lsquo;<samp>zero</samp>&rsquo;</dt>
+<dd><p>0
+</p></dd>
+<dt> &lsquo;<samp>vsad</samp>&rsquo;</dt>
+<dd><p>sum of absolute vertical differences
+</p></dd>
+<dt> &lsquo;<samp>vsse</samp>&rsquo;</dt>
+<dd><p>sum of squared vertical differences
+</p></dd>
+<dt> &lsquo;<samp>nsse</samp>&rsquo;</dt>
+<dd><p>noise preserving sum of squared differences
+</p></dd>
+<dt> &lsquo;<samp>dctmax</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>chroma</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-border_mask[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>increases the quantizer for macroblocks close to borders
+</p></dd>
+<dt> &lsquo;<samp>-mblmin[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>min macroblock lagrange factor (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-mblmax[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>max macroblock lagrange factor (VBR)
+</p></dd>
+<dt> &lsquo;<samp>-mepc[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>motion estimation bitrate penalty compensation (1.0 = 256)
+</p></dd>
+<dt> &lsquo;<samp>-skip_loop_filter[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>none</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>default</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>noref</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>bidir</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>nokey</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>all</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-skip_idct[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>none</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>default</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>noref</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>bidir</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>nokey</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>all</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-skip_frame[:stream_specifier] <var>integer</var> (<em>input,video</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>none</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>default</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>noref</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>bidir</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>nokey</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>all</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-bidir_refine[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>refine the two motion vectors used in bidirectional macroblocks
+</p></dd>
+<dt> &lsquo;<samp>-brd_scale[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>downscales frames for dynamic B-frame decision
+</p></dd>
+<dt> &lsquo;<samp>-keyint_min[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>minimum interval between IDR-frames
+</p></dd>
+<dt> &lsquo;<samp>-refs[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>reference frames to consider for motion compensation
+</p></dd>
+<dt> &lsquo;<samp>-chromaoffset[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>chroma qp offset from luma
+</p></dd>
+<dt> &lsquo;<samp>-trellis[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dd><p>rate-distortion optimal quantization
+</p></dd>
+<dt> &lsquo;<samp>-sc_factor[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>multiplied by qscale for each frame and added to scene_change_score
+</p></dd>
+<dt> &lsquo;<samp>-mv0_threshold[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-b_sensitivity[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>adjusts sensitivity of b_frame_strategy 1
+</p></dd>
+<dt> &lsquo;<samp>-compression_level[:stream_specifier] <var>integer</var> (<em>output,audio,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-min_prediction_order[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-max_prediction_order[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-timecode_frame_start[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>GOP timecode frame start number, in non drop frame format
+</p></dd>
+<dt> &lsquo;<samp>-request_channels[:stream_specifier] <var>integer</var> (<em>input,audio</em>)</samp>&rsquo;</dt>
+<dd><p>set desired number of audio channels
+</p></dd>
+<dt> &lsquo;<samp>-bits_per_raw_sample[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-channel_layout[:stream_specifier] <var>integer</var> (<em>input/output,audio</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p></dd>
+<dt> &lsquo;<samp>-request_channel_layout[:stream_specifier] <var>integer</var> (<em>input,audio</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p></dd>
+<dt> &lsquo;<samp>-rc_max_vbv_use[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-rc_min_vbv_use[:stream_specifier] <var>float</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-ticks_per_frame[:stream_specifier] <var>integer</var> (<em>input/output,audio,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-color_primaries[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-color_trc[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-colorspace[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-color_range[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-chroma_sample_location[:stream_specifier] <var>integer</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>-log_level_offset[:stream_specifier] <var>integer</var> (<em></em>)</samp>&rsquo;</dt>
+<dd><p>set the log level offset
+</p></dd>
+<dt> &lsquo;<samp>-slices[:stream_specifier] <var>integer</var> (<em>output,video</em>)</samp>&rsquo;</dt>
+<dd><p>number of slices, used in parallelized encoding
+</p></dd>
+<dt> &lsquo;<samp>-thread_type[:stream_specifier] <var>flags</var> (<em>input/output,video</em>)</samp>&rsquo;</dt>
+<dd><p>select multithreading type
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>slice</samp>&rsquo;</dt>
+<dt> &lsquo;<samp>frame</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-audio_service_type[:stream_specifier] <var>integer</var> (<em>output,audio</em>)</samp>&rsquo;</dt>
+<dd><p>audio service type
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>ma</samp>&rsquo;</dt>
+<dd><p>Main Audio Service
+</p></dd>
+<dt> &lsquo;<samp>ef</samp>&rsquo;</dt>
+<dd><p>Effects
+</p></dd>
+<dt> &lsquo;<samp>vi</samp>&rsquo;</dt>
+<dd><p>Visually Impaired
+</p></dd>
+<dt> &lsquo;<samp>hi</samp>&rsquo;</dt>
+<dd><p>Hearing Impaired
+</p></dd>
+<dt> &lsquo;<samp>di</samp>&rsquo;</dt>
+<dd><p>Dialogue
+</p></dd>
+<dt> &lsquo;<samp>co</samp>&rsquo;</dt>
+<dd><p>Commentary
+</p></dd>
+<dt> &lsquo;<samp>em</samp>&rsquo;</dt>
+<dd><p>Emergency
+</p></dd>
+<dt> &lsquo;<samp>vo</samp>&rsquo;</dt>
+<dd><p>Voice Over
+</p></dd>
+<dt> &lsquo;<samp>ka</samp>&rsquo;</dt>
+<dd><p>Karaoke
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-request_sample_fmt[:stream_specifier] <var>integer</var> (<em>input,audio</em>)</samp>&rsquo;</dt>
+<dd><p>sample format audio decoders should prefer
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>u8</samp>&rsquo;</dt>
+<dd><p>8-bit unsigned integer
+</p></dd>
+<dt> &lsquo;<samp>s16</samp>&rsquo;</dt>
+<dd><p>16-bit signed integer
+</p></dd>
+<dt> &lsquo;<samp>s32</samp>&rsquo;</dt>
+<dd><p>32-bit signed integer
+</p></dd>
+<dt> &lsquo;<samp>flt</samp>&rsquo;</dt>
+<dd><p>32-bit float
+</p></dd>
+<dt> &lsquo;<samp>dbl</samp>&rsquo;</dt>
+<dd><p>64-bit double
+</p></dd>
+</dl>
+</dd>
+</dl>
+
+<a name="Format-AVOptions"></a>
+<h2 class="section"><a href="ffserver.html#toc-Format-AVOptions">3.5 Format AVOptions</a></h2>
+<dl compact="compact">
+<dt> &lsquo;<samp>-avioflags <var>flags</var> (<em>input/output</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>direct</samp>&rsquo;</dt>
+<dd><p>reduce buffering
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-probesize <var>integer</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>set probing size
+</p></dd>
+<dt> &lsquo;<samp>-packetsize <var>integer</var> (<em>output</em>)</samp>&rsquo;</dt>
+<dd><p>set packet size
+</p></dd>
+<dt> &lsquo;<samp>-fflags <var>flags</var> (<em>input/output</em>)</samp>&rsquo;</dt>
+<dd>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>ignidx</samp>&rsquo;</dt>
+<dd><p>ignore index
+</p></dd>
+<dt> &lsquo;<samp>genpts</samp>&rsquo;</dt>
+<dd><p>generate pts
+</p></dd>
+<dt> &lsquo;<samp>nofillin</samp>&rsquo;</dt>
+<dd><p>do not fill in missing values that can be exactly calculated
+</p></dd>
+<dt> &lsquo;<samp>noparse</samp>&rsquo;</dt>
+<dd><p>disable AVParsers, this needs nofillin too
+</p></dd>
+<dt> &lsquo;<samp>igndts</samp>&rsquo;</dt>
+<dd><p>ignore dts
+</p></dd>
+<dt> &lsquo;<samp>discardcorrupt</samp>&rsquo;</dt>
+<dd><p>discard corrupted frames
+</p></dd>
+<dt> &lsquo;<samp>sortdts</samp>&rsquo;</dt>
+<dd><p>try to interleave outputted packets by dts
+</p></dd>
+<dt> &lsquo;<samp>keepside</samp>&rsquo;</dt>
+<dd><p>dont merge side data
+</p></dd>
+<dt> &lsquo;<samp>latm</samp>&rsquo;</dt>
+<dd><p>enable RTP MP4A-LATM payload
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-analyzeduration <var>integer</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>how many microseconds are analyzed to estimate duration
+</p></dd>
+<dt> &lsquo;<samp>-cryptokey <var>hexadecimal string</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>decryption key
+</p></dd>
+<dt> &lsquo;<samp>-indexmem <var>integer</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>max memory used for timestamp index (per stream)
+</p></dd>
+<dt> &lsquo;<samp>-rtbufsize <var>integer</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>max memory used for buffering real-time frames
+</p></dd>
+<dt> &lsquo;<samp>-fdebug <var>flags</var> (<em>input/output</em>)</samp>&rsquo;</dt>
+<dd><p>print specific debug info
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>ts</samp>&rsquo;</dt>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-max_delay <var>integer</var> (<em>input/output</em>)</samp>&rsquo;</dt>
+<dd><p>maximum muxing or demuxing delay in microseconds
+</p></dd>
+<dt> &lsquo;<samp>-fpsprobesize <var>integer</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>number of frames used to probe fps
+</p></dd>
+<dt> &lsquo;<samp>-audio_preload <var>integer</var> (<em>output</em>)</samp>&rsquo;</dt>
+<dd><p>microseconds by which audio packets should be interleaved earlier
+</p></dd>
+<dt> &lsquo;<samp>-chunk_duration <var>integer</var> (<em>output</em>)</samp>&rsquo;</dt>
+<dd><p>microseconds for each chunk
+</p></dd>
+<dt> &lsquo;<samp>-chunk_size <var>integer</var> (<em>output</em>)</samp>&rsquo;</dt>
+<dd><p>size in bytes for each chunk
+</p></dd>
+<dt> &lsquo;<samp>-f_err_detect <var>flags</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>set error detection flags (deprecated; use err_detect, save via avconv)
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>crccheck</samp>&rsquo;</dt>
+<dd><p>verify embedded CRCs
+</p></dd>
+<dt> &lsquo;<samp>bitstream</samp>&rsquo;</dt>
+<dd><p>detect bitstream specification deviations
+</p></dd>
+<dt> &lsquo;<samp>buffer</samp>&rsquo;</dt>
+<dd><p>detect improper bitstream length
+</p></dd>
+<dt> &lsquo;<samp>explode</samp>&rsquo;</dt>
+<dd><p>abort decoding on minor error detection
+</p></dd>
+<dt> &lsquo;<samp>careful</samp>&rsquo;</dt>
+<dd><p>consider things that violate the spec and have not been seen in the wild as errors
+</p></dd>
+<dt> &lsquo;<samp>compliant</samp>&rsquo;</dt>
+<dd><p>consider all spec non compliancies as errors
+</p></dd>
+<dt> &lsquo;<samp>aggressive</samp>&rsquo;</dt>
+<dd><p>consider things that a sane encoder shouldnt do as an error
+</p></dd>
+</dl>
+</dd>
+<dt> &lsquo;<samp>-err_detect <var>flags</var> (<em>input</em>)</samp>&rsquo;</dt>
+<dd><p>set error detection flags
+</p>
+<p>Possible values:
+</p><dl compact="compact">
+<dt> &lsquo;<samp>crccheck</samp>&rsquo;</dt>
+<dd><p>verify embedded CRCs
+</p></dd>
+<dt> &lsquo;<samp>bitstream</samp>&rsquo;</dt>
+<dd><p>detect bitstream specification deviations
+</p></dd>
+<dt> &lsquo;<samp>buffer</samp>&rsquo;</dt>
+<dd><p>detect improper bitstream length
+</p></dd>
+<dt> &lsquo;<samp>explode</samp>&rsquo;</dt>
+<dd><p>abort decoding on minor error detection
+</p></dd>
+<dt> &lsquo;<samp>careful</samp>&rsquo;</dt>
+<dd><p>consider things that violate the spec and have not been seen in the wild as errors
+</p></dd>
+<dt> &lsquo;<samp>compliant</samp>&rsquo;</dt>
+<dd><p>consider all spec non compliancies as errors
+</p></dd>
+<dt> &lsquo;<samp>aggressive</samp>&rsquo;</dt>
+<dd><p>consider things that a sane encoder shouldnt do as an error
+</p></dd>
+</dl>
+</dd>
+</dl>
+
+<a name="Main-options"></a>
+<h2 class="section"><a href="ffserver.html#toc-Main-options">3.6 Main options</a></h2>
+
+<dl compact="compact">
+<dt> &lsquo;<samp>-f <var>configfile</var></samp>&rsquo;</dt>
+<dd><p>Use &lsquo;<tt>configfile</tt>&rsquo; instead of &lsquo;<tt>/etc/ffserver.conf</tt>&rsquo;.
+</p></dd>
+<dt> &lsquo;<samp>-n</samp>&rsquo;</dt>
+<dd><p>Enable no-launch mode. This option disables all the Launch directives
+within the various &lt;Stream&gt; sections. Since ffserver will not launch
+any ffmpeg instances, you will have to launch them manually.
+</p></dd>
+<dt> &lsquo;<samp>-d</samp>&rsquo;</dt>
+<dd><p>Enable debug mode. This option increases log verbosity, directs log
+messages to stdout and causes ffserver to run in the foreground
+rather than as a daemon.
+</p></dd>
+</dl>
+
+
+<div id="footer">
+<p>
+ <font size="-1">
+  This document was generated by <em>anshu</em> on <em>June 22, 2012</em> using <a href="http://www.nongnu.org/texi2html/"><em>texi2html 1.82</em></a>.
+ </font>
+ <br>
+</div></div>
+</p>
+</body>
+</html>
+</div>
