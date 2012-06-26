@@ -14,17 +14,34 @@ def add_video_stream(oc, codec_id, pFormatCtx1, pVideoCodecCtx1):
 		print "Could not allocate video stream"
 		return 0
 	c = st.contents.codec
-	c.contents.codec_id = codec_id
-	c.codec_type = AVMEDIA_TYPE_VIDEO
-	c.contents.bit_rate = 400000
-	c.contents.width = 352
-	c.contents.height = 288
-	c.contents.time_base.den = 25
-	c.contents.time_base.num = 1
-	c.contents.gop_size = 12
-	c.contents.pix_fmt = PIX_FMT_YUV420P
+	c.contents.codec_id = pVideoCodecCtx1.contents.codec_id
+	c.codec_type = pVideoCodecCtx1.contents.codec_type
+	c.contents.bit_rate = pVideoCodecCtx1.contents.bit_rate
+	c.contents.width = pVideoCodecCtx1.contents.width
+	c.contents.height = pVideoCodecCtx1.contents.height
+	c.contents.time_base.den = pVideoCodecCtx1.contents.time_base.den
+	c.contents.time_base.num = pVideoCodecCtx1.contents.time_base.num
+	c.contents.gop_size = pVideoCodecCtx1.contents.gop_size
+	c.contents.pix_fmt = pVideoCodecCtx1.contents.pix_fmt
+
+	print "added video stream"
 	
 	return st
+
+def SaveFrame (pFrame, width, height, iFrame):
+	fileName = "frame" + str(iFrame) + '.ppm'
+	f = open(fileName, "w+")
+	#Write header
+	f.write("P6\n" + str(width) + " " + str(height)+  "\n255\n");
+	for i in range(0, width*height*3):
+			byte_init_ptr = pFrame.contents.data[0]
+			byte_init_addr = addressof(byte_init_ptr)
+			byte_cell_addr = byte_init_addr + i
+			byte_cell_ptr = cast(byte_cell_addr, LP_c_ubyte)
+			f.write(str(byte_cell_ptr.contents.value))
+	f.close()
+	return
+	
 
 av_register_all()
 
@@ -58,6 +75,7 @@ if (av_find_stream_info(pFormatCtx2)<0):
 #Acquire the video streams for the two files to be merged
 videoStream1=-1;
 i=0
+j=0
 
 for i in range(0,pFormatCtx1.contents.nb_streams):
     if(pFormatCtx1.contents.streams[i].contents.codec.contents.codec_type==AVMEDIA_TYPE_VIDEO):
@@ -119,6 +137,7 @@ pFrameFinished1 = pointer(frameFinished1)
 packet1 =  AVPacket()
 pPacket1 = pointer(packet1)
 av_init_packet(pPacket1)
+print "Frame allocation and packet allocation done"
 print pVideoCodecCtx1
 print pFrame1
 print pFrameFinished1
@@ -140,7 +159,29 @@ avio_open(oc.contents.pb, sys.argv[3], AVIO_FLAG_WRITE)
 
 while(av_read_frame(pFormatCtx1, pPacket1)>=0): 
 	if(packet1.stream_index==videoStream1): 
-		av_write_frame(oc, pPacket1);
+		'''
+		packetOut  = AVPacket()
+		pPacketOut = pointer(packetOut)
+		av_init_packet(pPacketOut)
+		pPacketOut.contents.dts = pPacket1.contents.dts
+		data = av_malloc(pPacket1.contents.size + FF_INPUT_BUFFER_PADDING_SIZE)
+		memcpy(data, pPacket1.contents.data, pPacket1.contents.size)
+		memset(data + pPacket1.contents.size, 0, FF_INPUT_BUFFER_PADDING_SIZE)
+		pData = cast(data, LP_c_ubyte)
+		pPacketOut.contents.data = pData
+		pPacketOut.contents.size = pPacket1.contents.size
+		pPacketOut.contents.stream_index = pPacket1.contents.stream_index
+		pPacketOut.contents.pts = pPacket1.contents.pts
+		pPacketOut.contents.flags = pPacket1.contents.flags
+		#pPacketOut.contents.side_data = pPacket1.contents.side_data
+		#pPacketOut.contents.side_data_elems = pPacket1.contents.side_data_elems
+		pPacketOut.contents.duration = pPacket1.contents.duration
+		pPacketOut.contents.priv = pPacket1.contents.priv
+		pPacketOut.contents.pos = pPacket1.contents.pos
+		pPacketOut.contents.convergence_duration = pPacket1.contents.convergence_duration
+		
+		print "dup packet done ", pPacketOut, pPacket1
+		av_interleaved_write_frame(oc, pPacketOut);
 		print "written packet to output"
 		'''
 		# Decode video frame
@@ -156,12 +197,19 @@ while(av_read_frame(pFormatCtx1, pPacket1)>=0):
                         pVideoCodecCtx1.contents.height, pFrameRGB1.contents.data, 			
 			pFrameRGB1.contents.linesize);
 			print " yeah, scaled and converted the image to rgb "
-                        av_free(pSWSContext);
-		'''
-		
-    
+			
+			print "writing to file"
+			i = i + 1
+			if i == 25: 
+				j = j + 1
+				i = 0
+				SaveFrame(pFrameRGB1, pVideoCodecCtx1.contents.width, pVideoCodecCtx1.contents.height, j)
+				
 
-	
-    
-  # Free the packet that was allocated by av_read_frame
+                        av_free(pSWSContext);
+			
+		
+# Free the packet that was allocated by av_read_frame
 av_free_packet(packet1);
+
+
