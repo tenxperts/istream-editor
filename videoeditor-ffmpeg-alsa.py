@@ -66,6 +66,10 @@ class VideoEditor:
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
 		self.hboxEditArrow = self.builder.get_object("hboxEditArrow")
 		self.hboxCompose = self.builder.get_object("hboxCompose")
+		self.mainNotebookComposeVBox = self.builder.get_object("MainNotebookComposeVBox")
+		self.mainNotebookComposeVBoxImage = self.builder.get_object("MainNotebookComposeVBoxImage")
+		self.buttonComposePaneVBoxAdd = self.builder.get_object("buttonComposePaneVBoxAdd")
+		self.mainNotebookImagePlayback = self.builder.get_object("MainNotebookImagePlayback")
 		self.hboxPlayBack.show()
 		self.hboxEditArrow.hide()
 		self.hboxCompose.hide()
@@ -518,7 +522,52 @@ class VideoEditor:
 		self.fileChooserDialogResponse=self.fileChooserDialog.run()
 		if self.fileChooserDialogResponse == gtk.RESPONSE_OK:	
 			self.currentComposeFileSelectedFullPathName = self.fileChooserDialog.get_filename()
+			#extract the first frame from the video and add a thumbnail
+			self.composeFFMpegReader = FFMpegReader()
+			self.composeFFMpegReader.open(self.currentComposeFileSelectedFullPathName)
+			self.composeFFMpegReaderTracks = self.composeFFMpegReader.get_tracks()
+			self.composeFFMpegReaderTracks[0].set_observer(self.initialize_compose_frame)
+			try:
+				self.composeFFMpegReader.step()
+			except IOError:
+				del self.composeFFMpegReader
+			del self.composeFFMpegReader
 		self.fileChooserDialog.destroy()
+		return
+
+	def initialize_compose_frame(self, thearray):
+		#check if the init MainNotbookComposeVBoxImage exists and remove the default image
+		if not(self.mainNotebookComposeVBoxImage == None):
+			self.mainNotebookComposeVBox.remove(self.mainNotebookComposeVBoxImage)
+			self.mainNotebookComposeVBoxImage == None
+		
+		#Init a scrolled window
+		self.mainNotebookComposeVBoxScrolledWindow = gtk.ScrolledWindow()
+		self.mainNotebookComposeVBoxScrolledWindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+
+		#Initialize an icon view and add to the scrolled window
+		self.mainNotebookComposeVBoxIconView = gtk.IconView()
+    		self.mainNotebookComposeVBoxListStore = gtk.ListStore(gtk.gdk.Pixbuf, str)
+    		self.mainNotebookComposeVBoxIconView.set_model(self.mainNotebookComposeVBoxListStore)
+    		self.mainNotebookComposeVBoxIconView.set_pixbuf_column(0)
+    		self.mainNotebookComposeVBoxIconView.set_text_column(1)
+    		self.mainNotebookComposeVBoxIconView.set_columns(2)
+		self.mainNotebookComposeVBoxScrolledWindow.add_with_viewport(self.mainNotebookComposeVBoxIconView)
+		self.mainNotebookComposeVBox.pack_start(self.mainNotebookComposeVBoxScrolledWindow, True, True, 10 )
+
+		#make an image with the current frame and add to the model
+		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
+		pixBufScaled =  pixBuf.scale_simple(120, 100, gtk.gdk.INTERP_HYPER)
+		self.mainNotebookComposeVBoxListStore.append((pixBufScaled,self.currentComposeFileSelectedFullPathName))
+
+		numComposeVBoxChildren = self.mainNotebookComposeVBox.get_children()
+		newAddButtonPos = len(numComposeVBoxChildren)
+		self.mainNotebookComposeVBox.reorder_child(self.buttonComposePaneVBoxAdd, newAddButtonPos)
+		self.mainNotebookComposeVBox.show_all()
+		
+		
+		
 		return
 
 	def on_button_add_clicked (self, widget):
