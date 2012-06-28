@@ -64,7 +64,7 @@ class VideoEditor:
 		self.adDictionaryFileNames = redis_wrap.get_hash('adDictionaryFileNames')
 		self.adDictionaryFileTotalFrames = redis_wrap.get_hash('adDictionaryFileTotalFrames')
 		self.window = self.builder.get_object("MainWindow")
-		self.window.resize(720,640)
+		self.window.resize(840,640)
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
 		self.hboxEditArrow = self.builder.get_object("hboxEditArrow")
 		self.hboxCompose = self.builder.get_object("hboxCompose")
