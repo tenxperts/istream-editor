@@ -108,6 +108,7 @@ class VideoEditor:
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
 				"on_buttonTrimAds_clicked" : self.on_button_trim_ads_clicked,
+				"on_buttonSaveTrimAds_clicked" : self.on_button_save_trim_ads_clicked,
 				"on_button_compose_pane_vbox_add_clicked" : self.on_button_compose_pane_vbox_add_clicked,
 				"on_button_add_clicked" : self.on_button_add_clicked,
 				"on_button_export_clicked" : self.on_button_export_clicked,
@@ -579,6 +580,14 @@ class VideoEditor:
 
 	def on_button_export_clicked (self, widget):
 		return
+
+	def on_button_save_trim_ads_clicked(self, widget):
+		self.saveTrimAdsFileChooserDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SAVE,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
+                self.saveTrimAdsFileChooserDialogResponse=self.saveTrimAdsFileChooserDialog.run()
+                if self.saveTrimAdsFileChooserDialogResponse == gtk.RESPONSE_OK:
+                        self.currentSaveTrimAdsFileSelectedFullPathName = self.saveTrimAdsFileChooserDialog.get_filename()
+                self.saveTrimAdsFileChooserDialog.destroy()
 
 	def main(self):
 		gtk.main()
