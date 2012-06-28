@@ -17,6 +17,7 @@ import alsaaudio
 import time
 import redis_wrap
 import redis
+import os
 
 TS_VIDEO_RGB24={ 'video1':(0, -1, {'pixel_format':PixelFormats.RGB24}), 'audio1':(1,-1,{})}
 
@@ -101,6 +102,7 @@ class VideoEditor:
 		self.trimAdsPlaybackTimer = None
 		self.skipAdFrames = False
 		self.currAdFramesToSkip = 0
+		self.saveTrimAdsMpegReader = None
 		if (self.window):
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
@@ -145,7 +147,6 @@ class VideoEditor:
 
 		
 	def one_pass_algo(self, filename):
-		import os
 		system_cmd_string = './algo ' + filename + ' 2>/dev/null'
 		os.system(system_cmd_string)
 		algo_output_file = open('algo.out')
@@ -605,10 +606,102 @@ class VideoEditor:
                 self.saveTrimAdsFileChooserDialogResponse=self.saveTrimAdsFileChooserDialog.run()
                 if self.saveTrimAdsFileChooserDialogResponse == gtk.RESPONSE_OK:
                         self.currentSaveTrimAdsFileSelectedFullPathName = self.saveTrimAdsFileChooserDialog.get_filename()
+			#Convert the file at a constant bit rate to mpg
+			ffmpegConvertToMpgString = 'ffmpeg -i ' + self.currentFileSelectedFullPathName + ' -b 2250k -minrate 2250k -maxrate 2250k -bufsize 1000k temp.mpg'
+			os.system(ffmpegConvertToMpgString)
+			
+			#Get the ranges for splits after trimming ads
+			videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
+			self.saveTrimAdsCurrFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+			self.saveTrimAdsCurrFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
+			self.saveTrimAdsCurrFilePlaybackFrameNum = 0
+			self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = 0
+			self.saveTrimAdsCurrFilePlaybackTotalTimeInSeconds = int(self.saveTrimAdsCurrFilePlaybackNFrames/self.saveTrimAdsCurrFilePlaybackFps)
+			cvReleaseCapture(videoCaptureFile)
+			self.saveTrimAdsMpegReader = FFMpegReader()
+			self.saveTrimAdsMpegReader.open(self.currentFileSelectedFullPathName)
+			self.saveTrimAdsTracks = self.saveTrimAdsMpegReader.get_tracks()
+			self.saveTrimAdsRanges = []
+			self.saveTrimAdsCurrRangeBegin = 0
+			self.saveTrimAdsSkippingAd = False
+			self.saveTrimAdsTracks[0].set_observer(self.saveTrimAdsGetRanges)
+			while True:
+				try:
+					self.saveTrimAdsMpegReader.step()
+				except IOError:
+					break;
+				
+			del self.saveTrimAdsMpegReader
+			self.saveTrimAdsMpegReader = None
+
+			#add a last range
+			lastRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-]"
+			self.saveTrimAdsRanges.append(lastRange)
+
+
+			#Use mpgtx to split the file with ranges
+			mpgtxTrimString = 'mpgtx -j temp.mpg '
+			
+			for i in range(0, len(self.saveTrimAdsRanges)):
+				mpgtxTrimString  = mpgtxTrimString +  " " + self.saveTrimAdsRanges[i] + " " 
+			mpgtxTrimString = mpgtxTrimString  + ' -o out.mpg '
+			print "will execute " + mpgtxTrimString
+			os.system(mpgtxTrimString)
+
+			#Transcode mpg back to the format specified at save time
+			ffmpegTranscodeToOutputString = 'ffmpeg -i out.mpg ' + self.currentSaveTrimAdsFileSelectedFullPathName 
+			os.system(ffmpegTranscodeToOutputString)
+			
+			#cleanup
+			os.remove("temp.mpg")
+			os.remove("out.mpg")
+
                 self.saveTrimAdsFileChooserDialog.destroy()
 
+	def saveTrimAdsGetRanges(self, thearray):
+		self.saveTrimAdsCurrFilePlaybackFrameNum = self.saveTrimAdsCurrFilePlaybackFrameNum + 1
+		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = int(self.saveTrimAdsCurrFilePlaybackFrameNum/self.saveTrimAdsCurrFilePlaybackFps)
+		if not (self.saveTrimAdsSkippingAd):
+			computedHash = self.computeHash(thearray)
+	
+			#see if we can match an ad	
+			if (computedHash in self.adDictionaryFileNames):
+				self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
+				self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
+				print "save trim ads found matching ad " + self.currAdMatchName
+				#Add a range
+				if len (self.saveTrimAdsRanges) == 0:
+					if not (self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds == 0):
+						currRange = "[-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds) + "]"
+					else:
+						currRange = "[-0:1]"  
+						
+					self.saveTrimAdsRanges.append(currRange)
+				else:
+					if not (self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds == self.saveTrimAdsCurrRangeBegin):
+						currRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds) + "]"
+					else:
+						currRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds + 1) + "]"
+					self.saveTrimAdsRanges.append(currRange)
+				#compute the begin time for the next range
+				self.saveTrimAdsCurrRangeBegin = self.saveTrimAdsCurrRangeBegin + int ((self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip) / self.saveTrimAdsCurrFilePlaybackFps) 
+				#skip the number of frames in the ad
+				self.saveTrimAdsSkippingAd = True
+				for i in range(1, self.currAdFramesToSkip):
+					try:
+						self.saveTrimAdsMpegReader.step()
+					except IOError:
+						return
+				self.saveTrimAdsSkippingAd = False
+		return 
+
 	def main(self):
-		gtk.main()
+		try:
+			gtk.main()
+		except Exception, e:
+			print  "Got an exception ", e
+			#do clean up
+			os.remove("temp.mpg")
 
 if __name__ == "__main__":
 	vEditor = VideoEditor()
