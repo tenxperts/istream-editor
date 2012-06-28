@@ -1,0 +1,7 @@
+setup.py
+redis_wrap/__init__.py
+redis_wrap.egg-info/PKG-INFO
+redis_wrap.egg-info/SOURCES.txt
+redis_wrap.egg-info/dependency_links.txt
+redis_wrap.egg-info/top_level.txt
+test/test.py

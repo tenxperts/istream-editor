@@ -15,6 +15,7 @@ from pyffmpeg import *
 import alsaaudio
 
 import time
+import redis_wrap
 
 TS_VIDEO_RGB24={ 'video1':(0, -1, {'pixel_format':PixelFormats.RGB24}), 'audio1':(1,-1,{})}
 
@@ -60,7 +61,8 @@ class VideoEditor:
         	self.builder.add_from_file(self.gladeFile)
 
 
-		self.adDictionary = {}
+		self.adDictionaryFileNames = redis_wrap.get_hash('adDictionaryFileNames')
+		self.adDictionaryFileTotalFrames = redis_wrap.get_hash('adDictionaryFileTotalFrames')
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(720,640)
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
@@ -205,7 +207,8 @@ class VideoEditor:
 		computedHash = self.computeHash(thearray)
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
 		nFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
-		self.adDictionary[computedHash] = (self.currentAdSelectedFullPathName, nFrames-1)
+		self.adDictionaryFileNames[computedHash] = self.currentAdSelectedFullPathName
+		self.adDictionaryFileTotalFrames[computedHash] = nFrames-1
 		cvReleaseCapture(videoCaptureFile)
 		return
 		
@@ -299,8 +302,9 @@ class VideoEditor:
 		if not self.skipAdFrames:
 			computedHash = self.computeHash(thearray)
 		
-			if (self.adDictionary.has_key(computedHash)):
-				(self.currAdMatchName, self.currAdFramesToSkip) = self.adDictionary[computedHash] 
+			if (computedHash in self.adDictionaryFileNames):
+				self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
+				self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
 				print "Found matching ad " , self.currAdMatchName, " will skip ", self.currAdFramesToSkip, " frames "
 				self.skipAdFrames = True
 				self.trimAdsAP._mute = True
