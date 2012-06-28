@@ -54,7 +54,7 @@
                         <property name="use_action_appearance">False</property>
                         <property name="image">image2</property>
                         <property name="use_stock">False</property>
-                        <signal name="activate" handler="on_MainMenuBar_clear_ad_database_activated" swapped="no"/>
+                        <signal name="activate" handler="on_MainMenuBar_clear_ad_database_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>

@@ -16,6 +16,7 @@ import alsaaudio
 
 import time
 import redis_wrap
+import redis
 
 TS_VIDEO_RGB24={ 'video1':(0, -1, {'pixel_format':PixelFormats.RGB24}), 'audio1':(1,-1,{})}
 
@@ -104,6 +105,7 @@ class VideoEditor:
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
 				"on_MainMenuBar_ad_load_activate" : self.main_menu_bar_ad_load_activate,
+				"on_MainMenuBar_clear_ad_database_activate" : self.main_menu_bar_clear_ad_database_activate,
 				"on_buttonPlay_clicked" : self.on_button_play_clicked,
 				"on_buttonStop_clicked" : self.on_button_stop_clicked,
 				"on_buttonKMeans_clicked" : self.on_button_kmeans_clicked,
@@ -170,6 +172,22 @@ class VideoEditor:
 		self.fileChooserDialog.destroy()
 		return	
 
+	def main_menu_bar_clear_ad_database_activate(self, widget):
+		self.clearAdDatabaseDialog = gtk.Dialog(title="Are you sure you want to clear the ad database",parent=None,
+                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OK,gtk.RESPONSE_OK))
+		self.clearAdDatabaseDialog.resize(600,10)
+		self.clearAdDatabaseDialogResponse = self.clearAdDatabaseDialog.run()
+		if self.clearAdDatabaseDialogResponse== gtk.RESPONSE_OK : 
+			#clear the ad dictionaries
+			redis_server = redis.Redis('localhost')
+			redis_server.delete('adDictionaryFileNames')
+			redis_server.delete('adDictionaryFileTotalFrames')
+			self.adDictionaryFileNames = {}
+			self.adDictionaryFileTotalFrames = {}
+		self.clearAdDatabaseDialog.destroy()
+		return	
+
+	
 	
 
 	def processAdLoad(self):
