@@ -654,7 +654,7 @@ class VideoEditor:
 			
 			#cleanup
 			os.remove("temp.mpg")
-			os.remove("out.mpg")
+			#os.remove("out.mpg")
 
                 self.saveTrimAdsFileChooserDialog.destroy()
 
@@ -684,7 +684,7 @@ class VideoEditor:
 						currRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds + 1) + "]"
 					self.saveTrimAdsRanges.append(currRange)
 				#compute the begin time for the next range
-				self.saveTrimAdsCurrRangeBegin = self.saveTrimAdsCurrRangeBegin + int ((self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip) / self.saveTrimAdsCurrFilePlaybackFps) 
+				self.saveTrimAdsCurrRangeBegin = int ((self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip) / self.saveTrimAdsCurrFilePlaybackFps) 
 				#skip the number of frames in the ad
 				self.saveTrimAdsSkippingAd = True
 				for i in range(1, self.currAdFramesToSkip):
