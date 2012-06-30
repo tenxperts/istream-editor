@@ -64,6 +64,7 @@ class VideoEditor:
 
 
 		self.adDictionaryFileNames = redis_wrap.get_hash('adDictionaryFileNames')
+		self.adDictionaryFileFrameNumber = redis_wrap.get_hash('adDictionaryFileFrameNumber')
 		self.adDictionaryFileTotalFrames = redis_wrap.get_hash('adDictionaryFileTotalFrames')
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(840,640)
@@ -182,8 +183,10 @@ class VideoEditor:
 			#clear the ad dictionaries
 			redis_server = redis.Redis('localhost')
 			redis_server.delete('adDictionaryFileNames')
+			redis_server.delete('adDictionaryFileFrameNumber')
 			redis_server.delete('adDictionaryFileTotalFrames')
 			self.adDictionaryFileNames = {}
+			self.adDictionaryFileFrameNumber = {}
 			self.adDictionaryFileTotalFrames = {}
 		self.clearAdDatabaseDialog.destroy()
 		return	
@@ -203,7 +206,9 @@ class VideoEditor:
                 	self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash)
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
 		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
-		for i in range(1,fps):
+		print "ad loaded at fps ", fps
+		for i in range(1,fps+1):
+			self.currAdFrameNumber = i
                 	self.adLoadMpegReader.step()
 		cvReleaseCapture(videoCaptureFile)
 		del self.adLoadMpegReader
@@ -228,7 +233,8 @@ class VideoEditor:
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
 		nFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
 		self.adDictionaryFileNames[computedHash] = self.currentAdSelectedFullPathName
-		self.adDictionaryFileTotalFrames[computedHash] = nFrames-1
+		self.adDictionaryFileTotalFrames[computedHash] = nFrames
+		self.adDictionaryFileFrameNumber[computedHash] = self.currAdFrameNumber
 		cvReleaseCapture(videoCaptureFile)
 		return
 		
@@ -614,16 +620,17 @@ class VideoEditor:
 			videoCaptureFile = cvCreateFileCapture(self.currentFileSelectedFullPathName);
 			self.saveTrimAdsCurrFilePlaybackFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
 			self.saveTrimAdsCurrFilePlaybackNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
+			cvReleaseCapture(videoCaptureFile)
 			self.saveTrimAdsCurrFilePlaybackFrameNum = 0
 			self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = 0
 			self.saveTrimAdsCurrFilePlaybackTotalTimeInSeconds = int(self.saveTrimAdsCurrFilePlaybackNFrames/self.saveTrimAdsCurrFilePlaybackFps)
-			cvReleaseCapture(videoCaptureFile)
 			self.saveTrimAdsMpegReader = FFMpegReader()
 			self.saveTrimAdsMpegReader.open(self.currentFileSelectedFullPathName)
 			self.saveTrimAdsTracks = self.saveTrimAdsMpegReader.get_tracks()
 			self.saveTrimAdsRanges = []
-			self.saveTrimAdsCurrRangeBegin = 0
+			self.saveTrimAdsCurrRangeBegin = 0.00
 			self.saveTrimAdsSkippingAd = False
+			self.saveTrimAdsFirstFrameIsAd = False
 			self.saveTrimAdsTracks[0].set_observer(self.saveTrimAdsGetRanges)
 			while True:
 				try:
@@ -635,7 +642,7 @@ class VideoEditor:
 			self.saveTrimAdsMpegReader = None
 
 			#add a last range
-			lastRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-]"
+			lastRange = "[" + self.time_in_seconds_to_hh_mm_ss_ss(self.saveTrimAdsCurrRangeBegin) + "-]"
 			self.saveTrimAdsRanges.append(lastRange)
 
 
@@ -654,46 +661,83 @@ class VideoEditor:
 			
 			#cleanup
 			os.remove("temp.mpg")
-			#os.remove("out.mpg")
+			os.remove("out.mpg")
 
                 self.saveTrimAdsFileChooserDialog.destroy()
 
 	def saveTrimAdsGetRanges(self, thearray):
 		self.saveTrimAdsCurrFilePlaybackFrameNum = self.saveTrimAdsCurrFilePlaybackFrameNum + 1
-		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = int(self.saveTrimAdsCurrFilePlaybackFrameNum/self.saveTrimAdsCurrFilePlaybackFps)
+		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = float(self.saveTrimAdsCurrFilePlaybackFrameNum)/float(self.saveTrimAdsCurrFilePlaybackFps)
+		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = round(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds,2)
 		if not (self.saveTrimAdsSkippingAd):
 			computedHash = self.computeHash(thearray)
 	
-			#see if we can match an ad	
+			#see if we can match an ad
 			if (computedHash in self.adDictionaryFileNames):
 				self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
 				self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
-				print "save trim ads found matching ad " + self.currAdMatchName
+				self.currAdFrameNumberMatched= int(self.adDictionaryFileFrameNumber[computedHash])
+				self.currAdPlaybackTime = float(self.currAdFramesToSkip)/float(self.saveTrimAdsCurrFilePlaybackFps)
+				self.currAdPlaybackTime = round(self.currAdPlaybackTime,2)
+				self.currAdFrameBeginTimeToBeAccounted = float(self.currAdFrameNumberMatched)/float(self.saveTrimAdsCurrFilePlaybackFps)
+				self.currAdFrameBeginTimeToBeAccounted = round(self.currAdFrameBeginTimeToBeAccounted,2)
+				self.currRangeEndInSeconds = self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds  - self.currAdFrameBeginTimeToBeAccounted
+				self.currRangeEndInSeconds = round(self.currRangeEndInSeconds,2)
+				print "save trim ads found matching ad " + self.currAdMatchName + " frame matched at number " + str(self.currAdFrameNumberMatched)
 				#Add a range
+
+				#Is this the first range we are adding ?
 				if len (self.saveTrimAdsRanges) == 0:
-					if not (self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds == 0):
-						currRange = "[-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds) + "]"
+					print "first range end is " , self.currRangeEndInSeconds
+					#Did we match an ad at the beginning
+					if not (self.currRangeEndInSeconds == 0.00):
+						print "adding first range"
+						print "begin ", self.saveTrimAdsCurrRangeBegin
+						print "end ", self.currRangeEndInSeconds
+						currRange = "[" + self.time_in_seconds_to_hh_mm_ss_ss(self.saveTrimAdsCurrRangeBegin) + "-" +  self.time_in_seconds_to_hh_mm_ss_ss(self.currRangeEndInSeconds) + "]"
+						self.saveTrimAdsRanges.append(currRange)
 					else:
-						currRange = "[-0:1]"  
-						
-					self.saveTrimAdsRanges.append(currRange)
+						print "ad found at beginning"
+						self.saveTrimAdsCurrRangeBegin = float(self.currAdFramesToSkip)/ float(self.saveTrimAdsCurrFilePlaybackFps)
+						self.saveTrimAdsCurrRangeBegin = round(self.saveTrimAdsCurrRangeBegin,2)
+						print "curr range begin set to ", self.saveTrimAdsCurrRangeBegin
+						self.saveTrimAdsFirstFrameIsAd = True
 				else:
-					if not (self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds == self.saveTrimAdsCurrRangeBegin):
-						currRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds) + "]"
-					else:
-						currRange = "[0:" + str(self.saveTrimAdsCurrRangeBegin) + "-0:" + str(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds + 1) + "]"
-					self.saveTrimAdsRanges.append(currRange)
-				#compute the begin time for the next range
-				self.saveTrimAdsCurrRangeBegin = int ((self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip) / self.saveTrimAdsCurrFilePlaybackFps) 
+					print "adding range > 1"
+					print "currPlaybackCurrTimeInSeconds " , self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds
+					print "currAdFrameBeginTimeToBeAccounted " , self.currAdFrameBeginTimeToBeAccounted
+					print "currRangeBegin" , self.saveTrimAdsCurrRangeBegin
+					print "currRangeEndInSeconds " , self.currRangeEndInSeconds
+					#if the times differ only in fractions of a second - dont add a range
+					if not (round(self.saveTrimAdsCurrRangeBegin, 0) == round(self.currRangeEndInSeconds, 0)):
+						currRange = "[" + self.time_in_seconds_to_hh_mm_ss_ss(self.saveTrimAdsCurrRangeBegin) + "-" + self.time_in_seconds_to_hh_mm_ss_ss(self.currRangeEndInSeconds) + "]"
+						self.saveTrimAdsRanges.append(currRange)
+				if not self.saveTrimAdsFirstFrameIsAd: 
+					#compute the begin time for the next range
+					self.saveTrimAdsCurrRangeBegin = (float(self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip - self.currAdFrameNumberMatched)) / float(self.saveTrimAdsCurrFilePlaybackFps)
+					self.saveTrimAdsCurrRangeBegin = round(self.saveTrimAdsCurrRangeBegin,2)
+					print "no first ad begin set to ", self.saveTrimAdsCurrRangeBegin
+				else:
+					self.saveTrimAdsFirstFrameIsAd = False
+
 				#skip the number of frames in the ad
 				self.saveTrimAdsSkippingAd = True
-				for i in range(1, self.currAdFramesToSkip):
+				for i in range(1, self.currAdFramesToSkip - self.currAdFrameNumberMatched):
 					try:
 						self.saveTrimAdsMpegReader.step()
 					except IOError:
 						return
 				self.saveTrimAdsSkippingAd = False
 		return 
+
+	def time_in_seconds_to_hh_mm_ss_ss(self, timeIn):
+		milliseconds = timeIn * 1000
+		hours, milliseconds = divmod(milliseconds, 3600000)
+		minutes, milliseconds = divmod(milliseconds, 60000)
+		seconds = float(milliseconds)/ 1000
+		retVal = "%02i:%02i:%05.2f" % (hours, minutes, seconds)
+		return retVal
+		
 
 	def main(self):
 		try:
@@ -702,6 +746,7 @@ class VideoEditor:
 			print  "Got an exception ", e
 			#do clean up
 			os.remove("temp.mpg")
+			os.remove("out.mpg")
 
 if __name__ == "__main__":
 	vEditor = VideoEditor()
