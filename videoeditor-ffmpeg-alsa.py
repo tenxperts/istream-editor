@@ -66,6 +66,7 @@ class VideoEditor:
 		self.adDictionaryFileNames = redis_wrap.get_hash('adDictionaryFileNames')
 		self.adDictionaryFileFrameNumber = redis_wrap.get_hash('adDictionaryFileFrameNumber')
 		self.adDictionaryFileTotalFrames = redis_wrap.get_hash('adDictionaryFileTotalFrames')
+		self.adDictionaryFileLastFrameNumber = redis_wrap.get_hash('adDictionaryFileLastFrameNumber')
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(840,640)
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
@@ -195,24 +196,47 @@ class VideoEditor:
 	
 
 	def processAdLoad(self):
-                if (self.adLoadMpegReader == None):
-                        ## create the reader object
-                        self.adLoadMpegReader=FFMpegReader()
+                ## create the reader object
+                self.adLoadMpegReader=FFMpegReader()
 
-                	## open an audio video file
-                	self.adLoadMpegReader.open(self.currentAdSelectedFullPathName, TS_VIDEO_RGB24)
-                	self.adLoadMpegReaderTracks=self.adLoadMpegReader.get_tracks()
+                ## open an audio video file
+                self.adLoadMpegReader.open(self.currentAdSelectedFullPathName, TS_VIDEO_RGB24)
+                self.adLoadMpegReaderTracks=self.adLoadMpegReader.get_tracks()
 
-                	self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash)
+               	self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash)
 		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
-		fps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
-		print "ad loaded at fps ", fps
-		for i in range(1,fps+1):
+		self.currAdFps =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FPS))
+		self.currAdNFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
+		self.beginAdFramesStored = 0
+		cvReleaseCapture(videoCaptureFile)
+		print "ad loaded at fps ", self.currAdFps
+		print "ad frames", self.currAdNFrames
+		#Load the first few frames of the ad and store
+		i = 1;
+		while not(self.beginAdFramesStored == self.currAdFps):
 			self.currAdFrameNumber = i
                 	self.adLoadMpegReader.step()
-		cvReleaseCapture(videoCaptureFile)
+			i = i  + 1
+		self.beginAdFramesStored = 0
+
+
+                ## open an audio video file
+		#seek till end of the file and seek back
+		self.endAdFramesStored = 0
+		self.adLoadMpegReaderTracks[0].seek_to_frame(self.currAdNFrames - 3)
+                self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash_for_last_frames)
+		i = 1;
+		while not(self.endAdFramesStored == self.currAdFps):
+			self.currAdFrameNumber = i
+			try:
+                		self.adLoadMpegReader.step()
+			except IOError, e:
+				print "got io error ", e
+				del self.adLoadMpegReader
+				return
+			i = i  + 1
+			self.adLoadMpegReaderTracks[0].seek_to_frame(self.currAdNFrames - i - 1)
 		del self.adLoadMpegReader
-		self.adLoadMpegReader = None
 		return
 
 	def computeHash(self,frame):
@@ -230,14 +254,24 @@ class VideoEditor:
 
 	def compute_ad_frame_hash(self, thearray):
 		computedHash = self.computeHash(thearray)
-		videoCaptureFile = cvCreateFileCapture(self.currentAdSelectedFullPathName);
-		nFrames =  int(cvGetCaptureProperty( videoCaptureFile, CV_CAP_PROP_FRAME_COUNT ))
-		self.adDictionaryFileNames[computedHash] = self.currentAdSelectedFullPathName
-		self.adDictionaryFileTotalFrames[computedHash] = nFrames
-		self.adDictionaryFileFrameNumber[computedHash] = self.currAdFrameNumber
-		cvReleaseCapture(videoCaptureFile)
+		print "writing begin frames hash to dictionary ", computedHash
+		if not (computedHash in self.adDictionaryFileNames):
+			self.beginAdFramesStored = self.beginAdFramesStored + 1
+			print "begin frames written to dictionary ", self.beginAdFramesStored
+			self.adDictionaryFileNames[computedHash] = self.currentAdSelectedFullPathName
+			self.adDictionaryFileTotalFrames[computedHash] = self.currAdNFrames
+			self.adDictionaryFileFrameNumber[computedHash] = self.currAdFrameNumber
 		return
 		
+	def compute_ad_frame_hash_for_last_frames(self, thearray):
+		computedHash = self.computeHash(thearray)
+		print "writing last frames hash to dictionary ", computedHash
+		if not (computedHash in self.adDictionaryFileLastFrameNumber):
+			self.endAdFramesStored = self.endAdFramesStored + 1
+			print "last frames written to dictionary ", computedHash, self.currAdFrameNumber
+			self.adDictionaryFileLastFrameNumber[computedHash] = self.currAdFrameNumber
+		return
+
 	def on_button_play_clicked(self, widget):
 		self.playbackMode = True
 		if not (self.playbackPaused):
@@ -309,7 +343,7 @@ class VideoEditor:
 			## connect audio to its device
 			self.trimAdsAP=AlsaSoundLazyPlayer(self.trimAdsPlaybackMpegReaderTracks[1].get_samplerate(),self.trimAdsPlaybackMpegReaderTracks[1].get_channels(),int(self.trimAdsPlaybackMpegReaderTracks[0].get_fps()))
 			self.trimAdsPlaybackMpegReaderTracks[1].set_observer(self.trimAdsAP.push_nowait)
-			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame)
+			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_begin)
 			return 1
 		try:
 			self.trimAdsPlaybackMpegReader.step()
@@ -321,29 +355,59 @@ class VideoEditor:
 			return 0
 
 
-    	def display_ads_trimmed_frame(self,thearray):
+    	def display_ads_trimmed_frame_till_begin(self,thearray):
       		"""
       		pyffmpeg callback
       		"""
-		if not self.skipAdFrames:
-			computedHash = self.computeHash(thearray)
+		print "looking for ads"
+		#if not self.skipAdFrames:
+		computedHash = self.computeHash(thearray)
 		
-			if (computedHash in self.adDictionaryFileNames):
-				self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
-				self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
-				print "Found matching ad " , self.currAdMatchName, " will skip ", self.currAdFramesToSkip, " frames "
-				self.skipAdFrames = True
-				self.trimAdsAP._mute = True
-				for i in range (1,self.currAdFramesToSkip):
-					self.trimAdsPlaybackMpegReader.step()
-				self.skipAdFrames = False
-				self.trimAdsAP._mute = False
+		if (computedHash in self.adDictionaryFileNames):
+			self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
+			self.currAdBeginFrameNumber =  self.adDictionaryFileFrameNumber[computedHash]
+			self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
+			#self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
+			#self.currAdBeginFrameNumber =  self.adDictionaryFileFrameNumber[computedHash]
+			#self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
+			#print "Found matching ad " , self.currAdMatchName, " will skip ", self.currAdFramesToSkip, " frames "
+			print "Found matching ad " , self.currAdMatchName
+			#self.skipAdFrames = True
+			self.trimAdsAP._mute = True
+			#skip ads till you find a end frame
+			#for i in range (1,self.currAdFramesToSkip):
+			#	self.trimAdsPlaybackMpegReader.step()
+			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_end)
+			#self.skipAdFrames = False
+			#self.trimAdsAP._mute = False
 
 		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
                 self.mainNotebookImagePlayback.queue_draw()
 		return
 
+    	def display_ads_trimmed_frame_till_end(self,thearray):
+      		"""
+      		pyffmpeg callback
+
+      		"""
+		computedHash = self.computeHash(thearray)
+		
+		if (computedHash in self.adDictionaryFileLastFrameNumber):
+			self.currAdEndFrameNumber= int(self.adDictionaryFileLastFrameNumber[computedHash])
+			print "Found matching ad end" , self.currAdMatchName, " will skip ", self.currAdEndFrameNumber
+			#skip end frames
+			for i in range (1,self.currAdEndFrameNumber+2):
+				self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_no_op)
+				self.trimAdsPlaybackMpegReader.step()
+			#reset observer to read till begin
+			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_begin)
+			self.currAdEndFrameSkip = False
+			self.trimAdsAP._mute = False
+
+	def display_no_op(self, thearray):
+		print "in display no op"
+		return
 
 	def on_button_stop_clicked(self, widget):
 		# Remove timers for playback and trim Ads
@@ -698,6 +762,8 @@ class VideoEditor:
 						self.saveTrimAdsRanges.append(currRange)
 					else:
 						print "ad found at beginning"
+						print "currAdFramesToSkip ", self.currAdFramesToSkip
+						print "saveTrimAdsCurrFilePlaybackFps", self.saveTrimAdsCurrFilePlaybackFps
 						self.saveTrimAdsCurrRangeBegin = float(self.currAdFramesToSkip)/ float(self.saveTrimAdsCurrFilePlaybackFps)
 						self.saveTrimAdsCurrRangeBegin = round(self.saveTrimAdsCurrRangeBegin,2)
 						print "curr range begin set to ", self.saveTrimAdsCurrRangeBegin
