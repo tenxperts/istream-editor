@@ -18,6 +18,9 @@ import time
 import redis_wrap
 import redis
 import os
+from PIL import Image
+import math
+
 
 TS_VIDEO_RGB24={ 'video1':(0, -1, {'pixel_format':PixelFormats.RGB24}), 'audio1':(1,-1,{})}
 
@@ -63,10 +66,8 @@ class VideoEditor:
         	self.builder.add_from_file(self.gladeFile)
 
 
-		self.adDictionaryFileNames = redis_wrap.get_hash('adDictionaryFileNames')
-		self.adDictionaryFileFrameNumber = redis_wrap.get_hash('adDictionaryFileFrameNumber')
-		self.adDictionaryFileTotalFrames = redis_wrap.get_hash('adDictionaryFileTotalFrames')
-		self.adDictionaryFileLastFrameNumber = redis_wrap.get_hash('adDictionaryFileLastFrameNumber')
+		self.adDictionaryFileBeginFrame = redis_wrap.get_hash('adDictionaryFileBeginFrame')
+		self.adDictionaryFileEndFrame = redis_wrap.get_hash('adDictionaryFileEndFrame')
 		self.window = self.builder.get_object("MainWindow")
 		self.window.resize(840,640)
 		self.hboxPlayBack = self.builder.get_object("hboxPlayBack")
@@ -105,6 +106,9 @@ class VideoEditor:
 		self.skipAdFrames = False
 		self.currAdFramesToSkip = 0
 		self.saveTrimAdsMpegReader = None
+		self.imageHashCounter = 0
+		self.imagePlaybackCounter = 0
+	 	self.trimAdsDisplayBeginReInit = False
 		if (self.window):
 			dic = { "on_MainWindow_destroy" : gtk.main_quit,
 				"on_MainMenuBar_file_open_activate" : self.main_menu_bar_file_open_activate,
@@ -134,6 +138,9 @@ class VideoEditor:
       		"""
       		pyffmpeg callback
       		"""
+		self.imagePlaybackCounter = self.imagePlaybackCounter + 1
+		im = Image.fromarray(thearray)
+		im.save('frameplay' + str(self.imagePlaybackCounter) + '.jpg', 'jpeg')	
 
 		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
 		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
@@ -183,12 +190,10 @@ class VideoEditor:
 		if self.clearAdDatabaseDialogResponse== gtk.RESPONSE_OK : 
 			#clear the ad dictionaries
 			redis_server = redis.Redis('localhost')
-			redis_server.delete('adDictionaryFileNames')
-			redis_server.delete('adDictionaryFileFrameNumber')
-			redis_server.delete('adDictionaryFileTotalFrames')
-			self.adDictionaryFileNames = {}
-			self.adDictionaryFileFrameNumber = {}
-			self.adDictionaryFileTotalFrames = {}
+			redis_server.delete('adDictionaryFileBeginFrame')
+			redis_server.delete('adDictionaryFileEndFrame')
+			self.adDictionaryFileBeginFrame = {}
+			self.adDictionaryFileEndFrame = {}
 		self.clearAdDatabaseDialog.destroy()
 		return	
 
@@ -211,13 +216,9 @@ class VideoEditor:
 		cvReleaseCapture(videoCaptureFile)
 		print "ad loaded at fps ", self.currAdFps
 		print "ad frames", self.currAdNFrames
-		#Load the first few frames of the ad and store
-		i = 1;
-		while not(self.beginAdFramesStored == self.currAdFps):
-			self.currAdFrameNumber = i
-                	self.adLoadMpegReader.step()
-			i = i  + 1
-		self.beginAdFramesStored = 0
+		#Load the first frame of the ad and store
+		self.currAdFrameNumber = 1
+                self.adLoadMpegReader.step()
 
 
                 ## open an audio video file
@@ -225,25 +226,126 @@ class VideoEditor:
 		self.endAdFramesStored = 0
 		self.adLoadMpegReaderTracks[0].seek_to_frame(self.currAdNFrames - 3)
                 self.adLoadMpegReaderTracks[0].set_observer(self.compute_ad_frame_hash_for_last_frames)
-		i = 1;
-		while not(self.endAdFramesStored == self.currAdFps):
-			self.currAdFrameNumber = i
-			try:
-                		self.adLoadMpegReader.step()
-			except IOError, e:
-				print "got io error ", e
-				del self.adLoadMpegReader
-				return
-			i = i  + 1
-			self.adLoadMpegReaderTracks[0].seek_to_frame(self.currAdNFrames - i - 1)
+		self.currAdFrameNumber = 1
+		try:
+                	self.adLoadMpegReader.step()
+		except IOError, e:
+			print "got io error ", e
+			del self.adLoadMpegReader
+			return
 		del self.adLoadMpegReader
 		return
 
+	
+	def scale_image(self, im, size):
+		im = im.resize((size, size), Image.ANTIALIAS)
+		return im
+
+	def gray_scale(self,im):
+		im = im.convert('L')
+		return im
+
+	def print_pixels(self,im):
+		pixels = im.load()
+		width, height = im.size
+		for x in range(width):
+			for y in range(height):
+				print pixels[x,y]
+
+	def getBlue(self,im):
+		pixels = im.load()
+		width, height = im.size
+		for x in range(width):
+			for y in range(height):
+				pixel =  pixels[x,y]
+				blue = pixel & 0xff
+				im.putpixel((x,y), blue)
+		return im
+
+	def initCoefficients(self,size):
+		c = numpy.empty((size))
+		for i in range(size):
+			c[i] = 1
+		c[0] = 1/math.sqrt(2)
+		return c
+
+
+	def apply_dct(self,f, size, c):
+		pixels = f.load()
+		N = size;
+
+		F = numpy.zeros(shape=(N, N))
+		for u in range(0,N):
+		  	for v in range(0,N):
+		    		sum = 0.0;
+		    		for i in range(0,N):
+		      			for  j in range(0,N):
+		        			sum = sum + math.cos(((2*i+1)/(2.0*N))*u*math.pi)*math.cos(((2*j+1)/(2.0*N))*v*math.pi)*(pixels[i,j])
+		    		sum = sum * ((c[u]*c[v])/4.0)
+		    		F[u,v] = sum
+		return F
+
+
+	def compute_hash_from_dct_vals(self,dctVals, size, smallerSize):
+		total = 0.0
+		for x in range (0, smallerSize):
+			for y in range(0, smallerSize):
+		                        total += dctVals[x,y]
+		        total -= dctVals[0,0]
+
+		        avg = total / ((smallerSize * smallerSize) - 1)
+
+		       	hash = ""
+
+		        for x in range(0, smallerSize):
+		                for y in range(0, smallerSize):
+		                        if ((not (x == 0)) and (not (y == 0))): 
+						if dctVals[x,y] > avg:
+							hash = hash + "1"
+						else:
+							hash = hash + "0"
+			return hash
+
+	def to_decimal(self,x):
+	    return sum(map(lambda z: int(x[z]) and 2**(len(x) - z - 1),
+		           range(len(x)-1, -1, -1)))
+
+
+	def compute_dct_hash(self, im):
+		im = self.scale_image(im, 32)
+		im = self.gray_scale(im)
+		im = self.getBlue(im)
+		c = self.initCoefficients(32)
+		dctVals = self.apply_dct(im, 32, c)
+		hash = self.compute_hash_from_dct_vals(dctVals, 32, 8)
+		hash = self.to_decimal(hash)
+		return hash
+	
+	
+
+
+
 	def computeHash(self,frame):
-		im = adaptors.NumPy2PIL(frame)
-    		im = im.resize((8, 8), Image.ANTIALIAS).convert('L')
-    		avg = reduce(lambda x, y: x + y, im.getdata()) / 64.
-    		return reduce(lambda x, (y, z): x | (z << y), enumerate(map(lambda i: 0 if i < avg else 1, im.getdata())), 0)
+		im = Image.fromarray(frame)
+		im.save("hashimage.jpg", "jpeg")
+		hash = self.compute_dct_hash(im)
+		return hash
+		#im = adaptors.NumPy2PIL(frame)
+		#system_cmd_string = "java makeDCTHash hashimage.jpg"
+		
+		#hashOut = os.popen(system_cmd_string)
+		#hashIn = hashOut.readline()
+		
+		#print "hashIn ", hashIn
+		
+		#retVal = int(hashIn)
+		
+		#hashOut.close()
+		
+		#return retVal
+    		#im = im.resize((8, 8), Image.ANTIALIAS).convert('L')
+    		#avg = reduce(lambda x, y: x + y, im.getdata()) / 64.
+    		#return reduce(lambda x, (y, z): x | (z << y), enumerate(map(lambda i: 0 if i < avg else 1, im.getdata())), 0)
 
 	def hamming(self, h1, h2):
      		h, d = 0, h1 ^ h2
@@ -255,21 +357,22 @@ class VideoEditor:
 	def compute_ad_frame_hash(self, thearray):
 		computedHash = self.computeHash(thearray)
 		print "writing begin frames hash to dictionary ", computedHash
-		if not (computedHash in self.adDictionaryFileNames):
-			self.beginAdFramesStored = self.beginAdFramesStored + 1
-			print "begin frames written to dictionary ", self.beginAdFramesStored
-			self.adDictionaryFileNames[computedHash] = self.currentAdSelectedFullPathName
-			self.adDictionaryFileTotalFrames[computedHash] = self.currAdNFrames
-			self.adDictionaryFileFrameNumber[computedHash] = self.currAdFrameNumber
+		self.imageHashCounter = self.imageHashCounter + 1
+		im = Image.fromarray(thearray)
+		im.save('adframe' + str(self.imageHashCounter), 'jpeg')	
+		if not (computedHash in self.adDictionaryFileBeginFrame):
+			self.adDictionaryFileBeginFrame[computedHash] = self.currentAdSelectedFullPathName
 		return
 		
 	def compute_ad_frame_hash_for_last_frames(self, thearray):
 		computedHash = self.computeHash(thearray)
 		print "writing last frames hash to dictionary ", computedHash
-		if not (computedHash in self.adDictionaryFileLastFrameNumber):
-			self.endAdFramesStored = self.endAdFramesStored + 1
+		self.imageHashCounter = self.imageHashCounter + 1
+		im = Image.fromarray(thearray)
+		im.save('firstframe' + str(self.imageHashCounter), 'jpeg')	
+		if not (computedHash in self.adDictionaryFileEndFrame):
 			print "last frames written to dictionary ", computedHash, self.currAdFrameNumber
-			self.adDictionaryFileLastFrameNumber[computedHash] = self.currAdFrameNumber
+			self.adDictionaryFileEndFrame[computedHash] = self.currentAdSelectedFullPathName
 		return
 
 	def on_button_play_clicked(self, widget):
@@ -356,34 +459,30 @@ class VideoEditor:
 
 
     	def display_ads_trimmed_frame_till_begin(self,thearray):
+
+		if self.trimAdsDisplayBeginReInit:
+			im = Image.fromarray(thearray)
+			im.save('new.jpg')
       		"""
       		pyffmpeg callback
       		"""
-		print "looking for ads"
 		#if not self.skipAdFrames:
 		computedHash = self.computeHash(thearray)
-		
-		if (computedHash in self.adDictionaryFileNames):
-			self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
-			self.currAdBeginFrameNumber =  self.adDictionaryFileFrameNumber[computedHash]
-			self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
-			#self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
-			#self.currAdBeginFrameNumber =  self.adDictionaryFileFrameNumber[computedHash]
-			#self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
-			#print "Found matching ad " , self.currAdMatchName, " will skip ", self.currAdFramesToSkip, " frames "
-			print "Found matching ad " , self.currAdMatchName
-			#self.skipAdFrames = True
-			self.trimAdsAP._mute = True
-			#skip ads till you find a end frame
-			#for i in range (1,self.currAdFramesToSkip):
-			#	self.trimAdsPlaybackMpegReader.step()
-			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_end)
-			#self.skipAdFrames = False
-			#self.trimAdsAP._mute = False
 
-		pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
-		self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
-                self.mainNotebookImagePlayback.queue_draw()
+		if computedHash in self.adDictionaryFileBeginFrame:
+			print "Found matching ad begin", self.adDictionaryFileBeginFrame[computedHash]
+			im = Image.fromarray(thearray)
+			im.save("begin.jpg", "jpeg")
+				
+
+			self.currAdMatchName =  self.adDictionaryFileBeginFrame[computedHash]
+			self.trimAdsAP._mute = True
+			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_end)
+		else:
+
+			pixBuf = gtk.gdk.pixbuf_new_from_array(thearray, gtk.gdk.COLORSPACE_RGB, 8) 
+			self.mainNotebookImagePlayback.set_from_pixbuf(pixBuf)
+                	self.mainNotebookImagePlayback.queue_draw()
 		return
 
     	def display_ads_trimmed_frame_till_end(self,thearray):
@@ -392,17 +491,14 @@ class VideoEditor:
 
       		"""
 		computedHash = self.computeHash(thearray)
-		
-		if (computedHash in self.adDictionaryFileLastFrameNumber):
-			self.currAdEndFrameNumber= int(self.adDictionaryFileLastFrameNumber[computedHash])
-			print "Found matching ad end" , self.currAdMatchName, " will skip ", self.currAdEndFrameNumber
-			#skip end frames
-			for i in range (1,self.currAdEndFrameNumber+2):
-				self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_no_op)
-				self.trimAdsPlaybackMpegReader.step()
-			#reset observer to read till begin
+		if computedHash in self.adDictionaryFileEndFrame:
+			print "Found matching ad end ", self.adDictionaryFileEndFrame[computedHash]
+			im = Image.fromarray(thearray)
+			im.save("end.jpg", "jpeg")
+
+			im = Image.fromarray(thearray)
+			self.trimAdsDisplayBeginReInit = True
 			self.trimAdsPlaybackMpegReaderTracks[0].set_observer(self.display_ads_trimmed_frame_till_begin)
-			self.currAdEndFrameSkip = False
 			self.trimAdsAP._mute = False
 
 	def display_no_op(self, thearray):
@@ -695,7 +791,7 @@ class VideoEditor:
 			self.saveTrimAdsCurrRangeBegin = 0.00
 			self.saveTrimAdsSkippingAd = False
 			self.saveTrimAdsFirstFrameIsAd = False
-			self.saveTrimAdsTracks[0].set_observer(self.saveTrimAdsGetRanges)
+			self.saveTrimAdsTracks[0].set_observer(self.saveTrimAdsGetRangeEnd)
 			while True:
 				try:
 					self.saveTrimAdsMpegReader.step()
@@ -729,7 +825,7 @@ class VideoEditor:
 
                 self.saveTrimAdsFileChooserDialog.destroy()
 
-	def saveTrimAdsGetRanges(self, thearray):
+	def saveTrimAdsGetRangeEnd(self, thearray):
 		self.saveTrimAdsCurrFilePlaybackFrameNum = self.saveTrimAdsCurrFilePlaybackFrameNum + 1
 		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = float(self.saveTrimAdsCurrFilePlaybackFrameNum)/float(self.saveTrimAdsCurrFilePlaybackFps)
 		self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds = round(self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds,2)
@@ -738,54 +834,6 @@ class VideoEditor:
 	
 			#see if we can match an ad
 			if (computedHash in self.adDictionaryFileNames):
-				self.currAdMatchName =  self.adDictionaryFileNames[computedHash]
-				self.currAdFramesToSkip= int(self.adDictionaryFileTotalFrames[computedHash])
-				self.currAdFrameNumberMatched= int(self.adDictionaryFileFrameNumber[computedHash])
-				self.currAdPlaybackTime = float(self.currAdFramesToSkip)/float(self.saveTrimAdsCurrFilePlaybackFps)
-				self.currAdPlaybackTime = round(self.currAdPlaybackTime,2)
-				self.currAdFrameBeginTimeToBeAccounted = float(self.currAdFrameNumberMatched)/float(self.saveTrimAdsCurrFilePlaybackFps)
-				self.currAdFrameBeginTimeToBeAccounted = round(self.currAdFrameBeginTimeToBeAccounted,2)
-				self.currRangeEndInSeconds = self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds  - self.currAdFrameBeginTimeToBeAccounted
-				self.currRangeEndInSeconds = round(self.currRangeEndInSeconds,2)
-				print "save trim ads found matching ad " + self.currAdMatchName + " frame matched at number " + str(self.currAdFrameNumberMatched)
-				#Add a range
-
-				#Is this the first range we are adding ?
-				if len (self.saveTrimAdsRanges) == 0:
-					print "first range end is " , self.currRangeEndInSeconds
-					#Did we match an ad at the beginning
-					if not (self.currRangeEndInSeconds == 0.00):
-						print "adding first range"
-						print "begin ", self.saveTrimAdsCurrRangeBegin
-						print "end ", self.currRangeEndInSeconds
-						currRange = "[" + self.time_in_seconds_to_hh_mm_ss_ss(self.saveTrimAdsCurrRangeBegin) + "-" +  self.time_in_seconds_to_hh_mm_ss_ss(self.currRangeEndInSeconds) + "]"
-						self.saveTrimAdsRanges.append(currRange)
-					else:
-						print "ad found at beginning"
-						print "currAdFramesToSkip ", self.currAdFramesToSkip
-						print "saveTrimAdsCurrFilePlaybackFps", self.saveTrimAdsCurrFilePlaybackFps
-						self.saveTrimAdsCurrRangeBegin = float(self.currAdFramesToSkip)/ float(self.saveTrimAdsCurrFilePlaybackFps)
-						self.saveTrimAdsCurrRangeBegin = round(self.saveTrimAdsCurrRangeBegin,2)
-						print "curr range begin set to ", self.saveTrimAdsCurrRangeBegin
-						self.saveTrimAdsFirstFrameIsAd = True
-				else:
-					print "adding range > 1"
-					print "currPlaybackCurrTimeInSeconds " , self.saveTrimAdsCurrFilePlaybackCurrTimeInSeconds
-					print "currAdFrameBeginTimeToBeAccounted " , self.currAdFrameBeginTimeToBeAccounted
-					print "currRangeBegin" , self.saveTrimAdsCurrRangeBegin
-					print "currRangeEndInSeconds " , self.currRangeEndInSeconds
-					#if the times differ only in fractions of a second - dont add a range
-					if not (round(self.saveTrimAdsCurrRangeBegin, 0) == round(self.currRangeEndInSeconds, 0)):
-						currRange = "[" + self.time_in_seconds_to_hh_mm_ss_ss(self.saveTrimAdsCurrRangeBegin) + "-" + self.time_in_seconds_to_hh_mm_ss_ss(self.currRangeEndInSeconds) + "]"
-						self.saveTrimAdsRanges.append(currRange)
-				if not self.saveTrimAdsFirstFrameIsAd: 
-					#compute the begin time for the next range
-					self.saveTrimAdsCurrRangeBegin = (float(self.saveTrimAdsCurrFilePlaybackFrameNum + self.currAdFramesToSkip - self.currAdFrameNumberMatched)) / float(self.saveTrimAdsCurrFilePlaybackFps)
-					self.saveTrimAdsCurrRangeBegin = round(self.saveTrimAdsCurrRangeBegin,2)
-					print "no first ad begin set to ", self.saveTrimAdsCurrRangeBegin
-				else:
-					self.saveTrimAdsFirstFrameIsAd = False
-
 				#skip the number of frames in the ad
 				self.saveTrimAdsSkippingAd = True
 				for i in range(1, self.currAdFramesToSkip - self.currAdFrameNumberMatched):
